@@ -1,14 +1,405 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  FACEBOOK
+}
+
+enum OrgRole {
+  OWNER
+  MEMBER
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+}
+
+enum PlanScope {
+  INDIVIDUAL
+  ORG
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  TRIALING
+}
+
+enum LedgerType {
+  CONSUME
+  REFUND
+}
+
+// -------------------- USER --------------------
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  name           String?
+  provider       AuthProvider
+  passwordHash   String?      // only for EMAIL provider
+  emailVerified  Boolean      @default(false)
+
+  // for Google/Facebook login (since "No linking", keep it simple)
+  providerUserId String?      @unique
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  orgMemberships OrgMember[]
+  jobs           Job[]
+  usageDaily     UsageDaily[]
+  usageLedger    UsageLedger[]
+  attribution    UserAttribution?
+  stripeCustomer StripeCustomer?
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  @@index([provider])
+}
+
+// password reset tokens (since you want it)
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// email verification
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+
+// -------------------- ORGANIZATIONS --------------------
+
+model Organization {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+
+  // for seat limits
+  // (from subscription snapshot; stable even if plan changes later)
+  seatLimit   Int         @default(1)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  members     OrgMember[]
+  subscription Subscription?
+  customPlan   Plan?      @relation("CustomPlanOrg", fields: [customPlanId], references: [id])
+  customPlanId String?
+  jobs        Job[]
+  invites     OrgInvite[]
+}
+
+model OrgMember {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  role      OrgRole  @default(MEMBER)
+
+  // NOTE: you said inactive still counts -> keep membership even if user disabled
+  createdAt DateTime @default(now())
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+// Org invite system
+model OrgInvite {
+  id         String   @id @default(cuid())
+  orgId      String
+  email      String
+  invitedBy  String   // userId
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+
+  createdAt  DateTime @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([email])
+}
+
+
+// -------------------- PLANS --------------------
+
+// Plan table supports Free/Premium/Enterprise + Admin-created custom plans
+model Plan {
+  id            String     @id @default(cuid())
+  name          String
+  code          String     @unique   // FREE, PREMIUM, ENTERPRISE, CUSTOM_xxx
+  scope         PlanScope  // INDIVIDUAL or ORG
+  isCustom      Boolean    @default(false)
+
+  // limits
+  dailyQuotaMb  Int        // per user per day
+  seatLimit     Int        // 1 for FREE; 15 premium; 25 enterprise; custom adjustable
+
+  // Stripe mapping
+  stripePriceMonthlyId String?
+  stripePriceYearlyId  String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // reverse relation for custom plan per org
+  orgsCustom     Organization[] @relation("CustomPlanOrg")
+  subscriptions  Subscription[]
+}
+
+// Subscription per org (premium/enterprise/custom)
+// Free users might have no subscription or a "FREE" subscription record.
+model Subscription {
+  id            String              @id @default(cuid())
+  orgId         String              @unique
+  planId        String
+
+  status        SubscriptionStatus  @default(INCOMPLETE)
+  periodStart   DateTime?
+  periodEnd     DateTime?
+
+  // Stripe
+  stripeSubscriptionId String?      @unique
+  stripeCustomerId     String?
+
+  cancelAtPeriodEnd    Boolean      @default(false)
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  org           Organization        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  plan          Plan                @relation(fields: [planId], references: [id])
+}
+
+
+// -------------------- STRIPE --------------------
+
+model StripeCustomer {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+
+  stripeCustomerId String  @unique
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Store Stripe webhook events for idempotency/debugging
+model StripeEvent {
+  id              String   @id @default(cuid())
+  stripeEventId   String   @unique
+  type            String
+  payload         Json
+  receivedAt      DateTime @default(now())
+}
+
+
+// -------------------- FEATURES --------------------
+
+model Feature {
+  id          String    @id @default(cuid())
+  slug        String    @unique  // e.g. "video.compress", "image.resize"
+  title       String
+  mediaType   MediaType
+
+  // for enable/disable (admin control)
+  isEnabled   Boolean   @default(true)
+
+  // default config schema (for validation) - optional
+  configSchema Json?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  jobs        Job[]
+}
+
+
+// -------------------- JOBS --------------------
+
+model Job {
+  id          String     @id @default(cuid())
+
+  userId      String
+  orgId       String?
+  featureId   String
+
+  status      JobStatus  @default(QUEUED)
+
+  // store feature params: resize width/height, compress quality, etc.
+  params      Json
+
+  inputSizeMb Int
+  error       String?
+
+  // worker routing future-ready
+  region      String?     // e.g. "in-blr-1"
+  workerId    String?     // unique worker instance id
+
+  queuedAt     DateTime   @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  feature     Feature     @relation(fields: [featureId], references: [id])
+
+  files       JobFile[]
+  ledger      UsageLedger?
+
+  @@index([userId, createdAt])
+  @@index([orgId, createdAt])
+  @@index([status, createdAt])
+  @@index([featureId])
+}
+
+model JobFile {
+  id        String   @id @default(cuid())
+  jobId     String
+
+  kind      String   // INPUT or OUTPUT (keep flexible)
+  mimeType  String?
+
+  // store on S3/R2
+  storageProvider String @default("S3")
+  bucket     String?
+  key        String?
+  url        String?
+
+  sizeMb     Int?
+
+  createdAt DateTime @default(now())
+
+  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
+
+
+// -------------------- USAGE / QUOTA --------------------
+
+// Daily usage snapshot (for fast quota check)
+model UsageDaily {
+  id         String   @id @default(cuid())
+
+  userId     String
+  date       DateTime // normalized to 00:00 (IST or UTC)
+  usedMb     Int      @default(0)
+  refundedMb Int      @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+}
+
+// Ledger (for audit + exact refund logic)
+model UsageLedger {
+  id         String     @id @default(cuid())
+  userId     String
+  jobId      String     @unique
+  date       DateTime
+  type       LedgerType // CONSUME or REFUND
+  amountMb   Int
+
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+
+// -------------------- ANALYTICS --------------------
+
+model UserAttribution {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
+  firstTouchAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+// -------------------- OPTIONAL AUDIT LOG --------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  orgId      String?
+
+  action     String   // e.g. "ADMIN_TOGGLE_PLAN", "DELETE_USER"
+  entityType String?
+  entityId   String?
+  meta       Json?
+
+  createdAt  DateTime @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+

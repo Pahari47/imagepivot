@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "comment": "Immutable Job Contract for Redis/Celery Queue. Shared between TypeScript API and Python Worker.",
+  "schema": {
+    "jobId": "string (UUID/CUID)",
+    "userId": "string (UUID/CUID)",
+    "orgId": "string | null",
+    "mediaType": "IMAGE | AUDIO | VIDEO",
+    "featureSlug": "string (slug from Features table)",
+    "input": {
+      "storage": "S3 | R2",
+      "bucket": "string",
+      "key": "string",
+      "sizeMb": "number",
+      "mimeType": "string"
+    },
+    "output": {
+      "storage": "S3 | R2",
+      "bucket": "string",
+      "key": "string"
+    },
+    "params": "object (Dynamic based on featureSlug)",
+    "metadata": {
+      "utmSource": "string | null",
+      "utmCampaign": "string | null",
+      "priority": "number (0-10)",
+      "queuedAt": "ISO8601 String"
+    }
+  }
+}
+
