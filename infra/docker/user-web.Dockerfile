@@ -7,9 +7,9 @@ WORKDIR /app
 # 1) Copy root manifests first
 COPY package.json package-lock.json nx.json tsconfig.base.json ./
 
-# 2) Copy workspace package.json files (important for npm workspaces/Nx)
-COPY apps/*/package.json ./apps/*/
-COPY packages/*/package.json ./packages/*/
+# 2) Copy workspace structure (Nx manages dependencies from root, but copy structure for completeness)
+# Copy packages directory (contains shared/package.json if it exists)
+COPY packages ./packages
 
 # 3) Debug: Verify what Docker sees (temporary - remove after debugging)
 RUN echo "=== Debug Info ===" && \
