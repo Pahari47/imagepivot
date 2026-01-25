@@ -4,11 +4,25 @@ FROM node:22-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-# Copy workspace files required by Nx
+# 1) Copy root manifests first
 COPY package.json package-lock.json nx.json tsconfig.base.json ./
-# Copy Nx workspace projects
-COPY apps ./apps
-COPY packages ./packages
+
+# 2) Copy workspace package.json files (important for npm workspaces/Nx)
+COPY apps/*/package.json ./apps/*/
+COPY packages/*/package.json ./packages/*/
+
+# 3) Debug: Verify what Docker sees (temporary - remove after debugging)
+RUN echo "=== Debug Info ===" && \
+    node -v && npm -v && \
+    echo "=== Root package.json ===" && \
+    cat package.json | head -20 && \
+    echo "=== Workspace package.json files ===" && \
+    find apps packages -name package.json -type f 2>/dev/null | head -10 || true && \
+    echo "=== npm workspaces check ===" && \
+    npm pkg get workspaces || echo "No workspaces field" && \
+    echo "=== Starting npm ci ==="
+
+# 4) Install dependencies
 RUN npm ci
 
 # Build the application
