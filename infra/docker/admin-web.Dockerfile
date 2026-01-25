@@ -10,6 +10,8 @@ COPY package.json package-lock.json nx.json tsconfig.base.json ./
 # 2) Copy workspace structure (Nx manages dependencies from root, but copy structure for completeness)
 # Copy packages directory (contains shared/package.json if it exists)
 COPY packages ./packages
+# Copy apps workspace so npm ci can resolve workspace package.json files
+COPY apps ./apps
 
 # 3) Debug: Verify what Docker sees (temporary - remove after debugging)
 RUN echo "=== Debug Info ===" && \
