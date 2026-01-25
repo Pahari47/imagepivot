@@ -4,14 +4,17 @@ FROM node:22-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
+# Copy workspace files required by Nx
+COPY package.json package-lock.json nx.json tsconfig.base.json ./
+# Copy Nx workspace projects
+COPY apps ./apps
+COPY packages ./packages
 RUN npm ci
 
 # Build the application
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app /app
 
 # Build Admin Web
 ENV NEXT_TELEMETRY_DISABLED=1

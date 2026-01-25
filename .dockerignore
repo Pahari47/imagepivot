@@ -51,10 +51,9 @@ coverage
 *.test.js
 *.spec.js
 
-# Documentation
+# Documentation (keep specific, don't exclude all .md files - Nx needs some)
 README.md
 docs
-*.md
 
 # CI/CD
 .github

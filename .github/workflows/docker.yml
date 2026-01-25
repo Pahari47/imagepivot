@@ -35,7 +35,7 @@ jobs:
           context: .
           file: ./infra/docker/api.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ secrets.REGISTRY_URL }}/imagepivot-api:${{ github.sha }}
+          tags: ${{ secrets.REGISTRY_URL }}/${{ github.repository_owner }}/imagepivot-api:${{ github.sha }}
 
       - name: Build and push User Web image
         if: matrix.app == 'user-web'
@@ -44,7 +44,7 @@ jobs:
           context: .
           file: ./infra/docker/user-web.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ secrets.REGISTRY_URL }}/imagepivot-user-web:${{ github.sha }}
+          tags: ${{ secrets.REGISTRY_URL }}/${{ github.repository_owner }}/imagepivot-user-web:${{ github.sha }}
 
       - name: Build and push Admin Web image
         if: matrix.app == 'admin-web'
@@ -53,7 +53,7 @@ jobs:
           context: .
           file: ./infra/docker/admin-web.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ secrets.REGISTRY_URL }}/imagepivot-admin-web:${{ github.sha }}
+          tags: ${{ secrets.REGISTRY_URL }}/${{ github.repository_owner }}/imagepivot-admin-web:${{ github.sha }}
 
       - name: Build and push Worker image
         if: matrix.app == 'worker'
@@ -62,5 +62,5 @@ jobs:
           context: .
           file: ./infra/docker/worker.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ secrets.REGISTRY_URL }}/imagepivot-worker:${{ github.sha }}
+          tags: ${{ secrets.REGISTRY_URL }}/${{ github.repository_owner }}/imagepivot-worker:${{ github.sha }}
 
