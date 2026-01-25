@@ -25,7 +25,8 @@ RUN echo "=== Debug Info ===" && \
     echo "=== Starting npm ci ==="
 
 # 4) Install dependencies
-RUN npm ci
+# Try a clean install using the lockfile first; if that fails (lockfile mismatch in CI), fall back to a full install
+RUN npm ci || npm install --legacy-peer-deps --no-audit --no-fund --no-progress
 
 # Build the application
 FROM base AS builder
