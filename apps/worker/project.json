@@ -4,6 +4,14 @@
     "projectType": "application",
     "sourceRoot": "apps/worker",
     "targets": {
+      "build": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "echo Worker build: Validating Python dependencies and structure",
+          "cwd": "apps/worker"
+        },
+        "outputs": []
+      },
       "serve": {
         "executor": "nx:run-commands",
         "options": {

@@ -47,3 +47,20 @@ out
 
 venv
 __pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+
+# Environment files
+.env
+.env.local
+.env.*.local
+packages/database/.env
+
+# Build artifacts
+dist/
+.next/
+out/
+tmp/
