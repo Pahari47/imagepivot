@@ -60,6 +60,8 @@ jobs:
       - name: Validate Prisma Schema
         working-directory: packages/database
         run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
 
       - name: Generate Prisma Client
         working-directory: packages/database
@@ -141,10 +143,14 @@ jobs:
       - name: Validate Prisma Schema
         working-directory: packages/database
         run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
 
       - name: Check Prisma migrations
         working-directory: packages/database
         continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
         run: |
           # Check migration status (requires DATABASE_URL, but don't fail if not available)
           npx prisma migrate status || echo "Migration status check skipped (database not available)"
