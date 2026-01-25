@@ -1,11 +1,10 @@
 # API Dockerfile (TypeScript + Express)
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-COPY packages/database/package.json ./packages/database/
 RUN npm ci
 
 # Build the application
@@ -14,7 +13,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client (Prisma is now in root package.json)
 WORKDIR /app/packages/database
 RUN npx prisma generate
 
@@ -33,7 +32,6 @@ ENV HOST=0.0.0.0
 # Copy built application
 COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 
 # Create non-root user

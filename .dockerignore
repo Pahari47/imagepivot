@@ -2,8 +2,8 @@
 node_modules
 npm-debug.log
 yarn-error.log
-package-lock.json
 yarn.lock
+# Note: package-lock.json is needed for npm ci in Docker builds
 
 # Build outputs
 dist
