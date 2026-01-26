@@ -1,13 +1,16 @@
 {
-  "name": "shared",
+  "name": "@imagepivot/shared",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Shared validation schemas and utilities",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
 }
