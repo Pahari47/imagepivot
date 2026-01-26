@@ -1,0 +1,61 @@
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // Server
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().default('4000'),
+  HOST: z.string().default('localhost'),
+
+  // Database
+  DATABASE_URL: z.string().url(),
+
+  // JWT
+  JWT_SECRET: z.string().min(32),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
+
+  // OAuth - Google
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+
+  // OAuth - Facebook
+  FACEBOOK_APP_ID: z.string().optional(),
+  FACEBOOK_APP_SECRET: z.string().optional(),
+  FACEBOOK_CALLBACK_URL: z.string().url().optional(),
+
+  // Frontend URLs
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+  ADMIN_FRONTEND_URL: z.string().url().default('http://localhost:3001'),
+
+  // Email (for password reset, verification)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().optional(),
+
+  // CORS
+  CORS_ORIGIN: z.string().default('http://localhost:3000,http://localhost:3001'),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+function loadEnv(): Env {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('❌ Invalid environment variables:');
+      error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        console.error(`  ${path}: ${issue.message}`);
+      });
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+export const env = loadEnv();
+
