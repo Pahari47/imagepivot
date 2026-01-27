@@ -35,10 +35,7 @@ COPY --from=deps /app /app
 
 # Build Admin Web
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npx nx build admin-web --prod && \
-    echo "=== Verifying build output ===" && \
-    ls -la apps/admin-web/.next/standalone 2>/dev/null && echo "✓ standalone found" || echo "✗ standalone NOT found" && \
-    ls -la apps/admin-web/.next/static 2>/dev/null && echo "✓ static found" || echo "✗ static NOT found"
+RUN npx nx build admin-web --prod
 
 # Production image
 FROM base AS runner
@@ -50,7 +47,6 @@ ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy built application (standalone output)
-# Next.js creates .next in the source directory (apps/admin-web/.next)
 COPY --from=builder /app/apps/admin-web/.next/standalone ./
 COPY --from=builder /app/apps/admin-web/.next/static ./apps/admin-web/.next/static
 COPY --from=builder /app/apps/admin-web/public ./apps/admin-web/public
