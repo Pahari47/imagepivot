@@ -14,7 +14,15 @@ export class AuthController {
         });
       }
 
-      const result = await authService.register({ email, password, name });
+      // Get request origin from headers
+      const requestOrigin = req.headers.origin || req.headers.referer;
+
+      const result = await authService.register({ 
+        email, 
+        password, 
+        name,
+        requestOrigin: requestOrigin || undefined,
+      });
 
       res.status(201).json({
         success: true,
@@ -35,7 +43,14 @@ export class AuthController {
         });
       }
 
-      const result = await authService.login({ email, password });
+      // Get request origin from headers
+      const requestOrigin = req.headers.origin || req.headers.referer;
+
+      const result = await authService.login({ 
+        email, 
+        password,
+        requestOrigin: requestOrigin || undefined,
+      });
 
       res.json({
         success: true,

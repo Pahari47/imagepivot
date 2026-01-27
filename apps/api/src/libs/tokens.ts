@@ -6,6 +6,9 @@ export interface JWTPayload {
   userId: string;
   email: string;
   provider: 'EMAIL' | 'GOOGLE' | 'FACEBOOK';
+  globalRole: 'USER' | 'SUPER_ADMIN';
+  primaryOrgId?: string;
+  primaryOrgRole?: 'OWNER' | 'MEMBER';
 }
 
 export function generateJWT(payload: JWTPayload): string {

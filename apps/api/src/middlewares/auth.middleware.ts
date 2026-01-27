@@ -7,6 +7,9 @@ export interface AuthRequest extends Request {
     userId: string;
     email: string;
     provider: 'EMAIL' | 'GOOGLE' | 'FACEBOOK';
+    globalRole: 'USER' | 'SUPER_ADMIN';
+    primaryOrgId?: string;
+    primaryOrgRole?: 'OWNER' | 'MEMBER';
   };
 }
 
@@ -30,6 +33,9 @@ export function authMiddleware(
       userId: payload.userId,
       email: payload.email,
       provider: payload.provider,
+      globalRole: payload.globalRole || 'USER', // Default to USER for backward compatibility
+      primaryOrgId: payload.primaryOrgId,
+      primaryOrgRole: payload.primaryOrgRole,
     };
 
     next();

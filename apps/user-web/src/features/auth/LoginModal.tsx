@@ -59,7 +59,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
 
     if (response.success) {
       onClose();
-      router.push('/dashboard');
+      // Don't redirect - stay on current page
     } else {
       setError(response.error || 'Login failed');
     }

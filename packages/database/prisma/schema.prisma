@@ -51,6 +51,16 @@ enum LedgerType {
   REFUND
 }
 
+enum GlobalRole {
+  USER
+  SUPER_ADMIN
+}
+
+enum OrgType {
+  PERSONAL
+  BUSINESS
+}
+
 // -------------------- USER --------------------
 
 model User {
@@ -63,6 +73,9 @@ model User {
 
   // for Google/Facebook login (since "No linking", keep it simple)
   providerUserId String?      @unique
+
+  // Global role for platform-level permissions
+  globalRole     GlobalRole   @default(USER)
 
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -78,6 +91,7 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
 
   @@index([provider])
+  @@index([globalRole])
 }
 
 // password reset tokens (since you want it)
@@ -118,6 +132,9 @@ model Organization {
   name        String
   slug        String      @unique
 
+  // Organization type (PERSONAL for free users, BUSINESS for paid orgs)
+  type        OrgType     @default(PERSONAL)
+
   // for seat limits
   // (from subscription snapshot; stable even if plan changes later)
   seatLimit   Int         @default(1)
@@ -131,6 +148,8 @@ model Organization {
   customPlanId String?
   jobs        Job[]
   invites     OrgInvite[]
+
+  @@index([type])
 }
 
 model OrgMember {
@@ -271,7 +290,7 @@ model Job {
   id          String     @id @default(cuid())
 
   userId      String
-  orgId       String?
+  orgId       String      // Required: every job must belong to an org
   featureId   String
 
   status      JobStatus  @default(QUEUED)
@@ -294,7 +313,7 @@ model Job {
   updatedAt   DateTime    @updatedAt
 
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  org         Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   feature     Feature     @relation(fields: [featureId], references: [id])
 
   files       JobFile[]

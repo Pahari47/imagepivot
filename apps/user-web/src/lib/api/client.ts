@@ -118,6 +118,39 @@ class ApiClient {
       body: JSON.stringify({ token, password }),
     });
   }
+
+  // Org endpoints
+  async getMyOrg() {
+    return this.request<{ data: { org: any; role: string } }>('/orgs/me', {
+      method: 'GET',
+    });
+  }
+
+  async getOrgDetails(orgId: string) {
+    return this.request<{ data: { org: any; role: string } }>(`/orgs/${orgId}`, {
+      method: 'GET',
+    });
+  }
+
+  // Upload endpoints
+  async getQuotaInfo() {
+    return this.request<{ data: { limit: number; used: number; remaining: number; resetAt: string } }>('/upload/quota', {
+      method: 'GET',
+    });
+  }
+
+  async generatePresignedUrl(data: {
+    orgId: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    mediaType: 'image' | 'audio' | 'video';
+  }) {
+    return this.request<{ data: { uploadUrl: string; key: string; expiresIn: number } }>('/upload/presign', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

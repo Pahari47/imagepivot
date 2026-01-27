@@ -37,6 +37,17 @@ const envSchema = z.object({
 
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:3000,http://localhost:3001'),
+
+  // Request origin detection (for role assignment)
+  ADMIN_FRONTEND_ORIGIN: z.string().url().default('http://localhost:3001'),
+
+  // Cloudflare R2 / S3 Storage
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().default('imagepivot-uploads'),
+  R2_PUBLIC_URL: z.string().url().optional(), // Public URL for R2 bucket
+  R2_ENDPOINT: z.string().url().optional(), // R2 endpoint URL
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -46,7 +57,7 @@ function loadEnv(): Env {
     return envSchema.parse(process.env);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('❌ Invalid environment variables:');
+      console.error('Invalid environment variables:');
       error.issues.forEach((issue) => {
         const path = issue.path.join('.');
         console.error(`  ${path}: ${issue.message}`);

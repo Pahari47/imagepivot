@@ -1,0 +1,227 @@
+authentication - manual, google, facebook login
+user can convert some mb or gb of files in every 24 hour it reset like their will be limit suppose user first convert a video size of 200 mb, then convert a image of 45 mb and suppose limit is 245mb. so they cant do anymore. 
+plans: free - one user, less size limit. premium - can buy a org of 15 user max, like a office plan, little more size limit. enterprise - 25 user can get access, more size limit, and one will be custom like from admin panel it can be created for that org who contact for custom. 
+image - 15+ features. 
+audio - 15+ features. 
+video - 15+ features. 
+super admin dasboard. like admin can create custom payment for specific organization as per their requirement (the custom payment only the org users can see). admin can see all transaction details, how many user free, paid, etc. how much money generated, graphs. can see from where like it is from yt or twitter from where user coming, can delete user, toggle their plans. can see database storage full how much, is server active or not.
+
+some imporatnt question and answers:
+
+1) Authentication / Identity
+Will users be able to login using multiple providers on same account?
+Example: user signs up with email+password, later connects Google.
+No
+
+For manual login, do you want:
+password reset tokens
+email verification
+
+2) Organizations + Seats
+In Premium/Enterprise org plan:
+org owner invite members by email
+
+Seat rules:
+If premium = 15 users max
+enterprise = 25 users max
+✅ Should inactive users count in seat limit?
+Yes
+
+Roles inside org:
+Only 2 roles (OWNER / MEMBER)
+
+3) Plans & Billing
+Payment provider:
+Stripe
+Also do you need GST invoice support (India)? 
+No
+
+Billing model:
+Subscription monthly/yearly
+
+“Custom plan created by admin”:
+Custom plan = custom price + custom limits + custom seat count
+
+4) Usage Limit / Quota (Important)
+
+Your quota reset method should be which one?
+Resets at midnight (daily quota: 00:00 UTC/IST)
+
+Usage counting:
+Should quota count input file size OR output file size OR both?
+Example: upload 200MB video compress to 40MB
+Count 200MB
+
+If user submits job but job fails:
+Should quota be refunded? ✅
+Yes
+
+Org quota:
+Should quota be per-user OR shared across org? 
+Per user
+
+5) Media Jobs & Features 
+You said: image 15+ features audio 15+ features video 15+ features 
+Do you want features stored as
+Dynamic config table (features table with slug)
+Yes
+
+Output files: 
+storing file in Cloudflare R2
+
+One Output per job 
+Job statuses: queued, processing, completed, failed, cancelled 
+also do you want progress? 
+Not now
+
+6) Admin Dashboard analytics 
+Traffic source: will you track using UTM parameters? (utm_source, utm_campaign) 
+Utm 
+
+Multi-region servers: o
+nly 1 server now but design it like later we will add multiple 
+7) Deletion rules (important for schema) 
+Do you want: hard delete users/orgs 
+Yes
+
+
+Data Flow: 
+User uploads file -> API -> queue -> Worker -> Cloudflare R2 -> User downloads file
+
+Folder structure, mostly done but no need to maintain what is done is done no need to change.
+
+Repo Root:
+
+imagepivot/
+│
+├── apps/
+│   ├── api/                      # Root Server (TypeScript + Prisma)
+│   ├── worker/                   # FastAPI + Celery workers (processing)
+│   ├── user-web/                 # User client (Next.js / React)
+│   └── admin-web/                # Admin client (Next.js / React)
+│
+├── packages/
+│   ├── shared/                   # shared utils/types/constants between apps
+│   ├── ui/                       # shared UI components (optional)
+│   └── config/                   # eslint, tsconfig, prettier, tailwind config
+│
+├── infra/
+│   ├── docker/                   # dockerfiles per app
+│   ├── compose/                  # docker-compose stacks
+│   ├── nginx/                    # reverse proxy config
+│   └── scripts/                  # deployment scripts
+│
+├── docs/
+│   ├── architecture.md
+│   ├── api.md
+│   └── worker.md
+│
+├── .github/
+│   └── workflows/                # CI pipelines
+│
+├── .env.example
+├── docker-compose.yml
+├── turbo.json / nx.json
+├── package.json                  # workspace root
+└── README.md
+
+
+
+apps/api/
+│
+├── src/
+│   ├── config/                   # env parsing, config loader
+│   ├── modules/                  # domain-driven modules
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── orgs/
+│   │   ├── plans/
+│   │   ├── billing/
+│   │   ├── rbac/
+│   │   ├── quota/
+│   │   ├── jobs/
+│   │   ├── analytics/
+│   │   └── admin/
+│   │
+│   ├── middlewares/              # auth middleware, rate limit
+│   ├── libs/                     # reusable helpers (logger, redis, queue)
+│   ├── routes/                   # route composition layer
+│   ├── prisma/                   # prisma client wrapper
+│   ├── app.ts
+│   └── main.ts
+│
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+│
+├── tests/
+├── Dockerfile
+├── package.json
+└── tsconfig.json
+
+apps/api/src/modules/quota/
+├── quota.controller.ts
+├── quota.service.ts
+├── quota.repo.ts
+├── quota.dto.ts
+└── quota.validation.ts
+
+apps/worker/
+│
+├── app/
+│   ├── api/                      # FastAPI endpoints (optional, internal only)
+│   ├── core/                     # config, logging
+│   ├── tasks/                    # Celery tasks (image/audio/video)
+│   │   ├── image/
+│   │   ├── audio/
+│   │   ├── video/
+│   │   └── __init__.py
+│   │
+│   ├── services/                 # internal processing services
+│   ├── utils/
+│   └── main.py                   # FastAPI app entry
+│
+├── celery_app.py                 # celery init
+├── requirements.txt
+├── Dockerfile
+└── pyproject.toml (optional)
+
+Tasks example:
+
+apps/worker/app/tasks/video/convert.py
+apps/worker/app/tasks/image/compress.py
+apps/worker/app/tasks/audio/mp3_to_wav.py
+
+apps/user-web/
+├── src/
+│   ├── app/ or pages/
+│   ├── components/
+│   ├── features/
+│   │   ├── auth/
+│   │   ├── dashboard/
+│   │   ├── jobs/
+│   │   ├── billing/
+│   │   └── settings/
+│   ├── lib/
+│   └── styles/
+├── Dockerfile
+└── package.json
+
+apps/admin-web/
+├── src/
+│   ├── app/ or pages/
+│   ├── components/
+│   ├── features/
+│   │   ├── analytics/
+│   │   ├── users/
+│   │   ├── orgs/
+│   │   ├── plans/
+│   │   ├── payments/
+│   │   └── system-monitor/
+│   ├── lib/
+│   └── styles/
+├── Dockerfile
+└── package.json
+
+
+dont use emoji in code.
