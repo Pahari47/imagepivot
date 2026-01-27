@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { AuthProviderWrapper } from '../../components/providers/AuthProviderWrapper';
 import { ProtectedRoute } from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'next/navigation';
@@ -69,9 +70,11 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <ProtectedRoute>
-      <DashboardContent />
-    </ProtectedRoute>
+    <AuthProviderWrapper>
+      <ProtectedRoute>
+        <DashboardContent />
+      </ProtectedRoute>
+    </AuthProviderWrapper>
   );
 }
 

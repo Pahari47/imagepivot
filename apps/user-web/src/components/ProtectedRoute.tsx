@@ -12,7 +12,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading && !user && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.replace('/login');
+      router.replace('/');
     }
   }, [user, loading, router]);
 

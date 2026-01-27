@@ -1,5 +1,4 @@
 import './global.css';
-import { AuthProvider } from '../contexts/AuthContext';
 
 export const metadata = {
   title: 'ImagePivot - Media Conversion Platform',
@@ -14,7 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        {children}
       </body>
     </html>
   );

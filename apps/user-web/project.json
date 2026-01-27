@@ -30,6 +30,16 @@
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/user-web"
+      },
+      "configurations": {
+        "production": {
+          "env": {
+            "NODE_ENV": "production"
+          },
+          "options": {
+            "outputPath": "dist/apps/user-web"
+          }
+        }
       }
     }
   }

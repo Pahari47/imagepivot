@@ -19,9 +19,9 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const token = this.getToken();
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (token) {
@@ -73,21 +73,21 @@ class ApiClient {
 
   // Auth endpoints
   async register(data: { email: string; password: string; name?: string }) {
-    return this.request('/auth/register', {
+    return this.request<{ data: { user: any; token: string } }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async login(data: { email: string; password: string }) {
-    return this.request('/auth/login', {
+    return this.request<{ data: { user: any; token: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async getCurrentUser() {
-    return this.request<{ user: any }>('/auth/me', {
+    return this.request<{ data: { user: any } }>('/auth/me', {
       method: 'GET',
     });
   }

@@ -14,17 +14,17 @@ const nextConfig = {
   output: 'standalone', // Required for Docker
   webpack: (config, { isServer }) => {
     // Add alias for shared package
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@imagepivot/shared': path.resolve(__dirname, '../../packages/shared/src'),
-    };
+    if (config.resolve) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@imagepivot/shared': path.resolve(__dirname, '../../packages/shared/src'),
+      };
+    }
     return config;
   },
 };
 
-const plugins = [
-  // Add more Next.js plugins to this list if needed.
-  withNx,
-];
+// Try a simpler plugin composition
+const plugins = [withNx];
 
 module.exports = composePlugins(...plugins)(nextConfig);

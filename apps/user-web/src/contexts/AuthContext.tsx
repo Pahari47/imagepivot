@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const response = await apiClient.getCurrentUser();
-      if (response.success && response.data) {
+      if (response.success && response.data?.data?.user) {
         setUser(response.data.data.user);
       } else {
         setUser(null);
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await apiClient.login({ email, password });
-      if (response.success && response.data) {
+      if (response.success && response.data?.data?.token) {
         const token = response.data.data.token;
         apiClient.setToken(token);
         await refreshUser();
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, name?: string) => {
     try {
       const response = await apiClient.register({ email, password, name });
-      if (response.success && response.data) {
+      if (response.success && response.data?.data?.token) {
         const token = response.data.data.token;
         apiClient.setToken(token);
         await refreshUser();
@@ -108,6 +108,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    // During SSR or before AuthProvider is mounted, return a safe default
+    if (typeof window === 'undefined') {
+      return {
+        user: null,
+        loading: true,
+        login: async () => ({ success: false, error: 'Not available during SSR' }),
+        register: async () => ({ success: false, error: 'Not available during SSR' }),
+        logout: () => {},
+        refreshUser: async () => {},
+      };
+    }
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
