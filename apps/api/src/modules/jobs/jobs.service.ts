@@ -71,7 +71,7 @@ export class JobsService {
           orgId: input.orgId,
           featureId: feature.id,
           status: JobStatus.QUEUED,
-          params: input.params as Prisma.JsonObject,
+          params: input.params as Prisma.InputJsonValue,
           inputSizeMb,
           attempt: 0,
           maxAttempts: input.maxAttempts,
