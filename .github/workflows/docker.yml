@@ -1,11 +1,18 @@
+# Docker Build workflow - TEMPORARILY DISABLED
+# Disabled because Docker builds are failing (admin-web standalone output issue)
+# Will re-enable when ready for deployment and after fixing Docker build issues
+# TODO: Simplify Dockerfiles - currently messy, need cleanup
+
 name: Docker Build
 
 on:
-  push:
-    branches: [main, master]
-    tags:
-      - 'v*'
-  workflow_dispatch:
+  # Temporarily disabled - uncomment when ready
+  # push:
+  #   branches: [main, master]
+  #   tags:
+  #     - 'v*'
+  # workflow_dispatch:
+  workflow_dispatch: # Only allow manual trigger for now
 
 jobs:
   build-and-push:
