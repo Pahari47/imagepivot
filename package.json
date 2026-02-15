@@ -21,7 +21,15 @@
     "prisma:push": "cd packages/database && npx prisma db push",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "ci:lint": "npx nx run-many --target=lint --all",
+    "ci:typecheck": "npx nx run-many --target=typecheck --all",
+    "ci:build": "npm run prisma:generate && npm run build",
+    "ci:test": "npx nx run-many --target=test --all",
+    "ci:prisma": "cd packages/database && npx prisma validate && cd ../.. && npm run prisma:generate",
+    "ci:all": "npm ci && npm run ci:prisma && npm run ci:lint && npm run ci:typecheck && npm run ci:build && npm run ci:test",
+    "ci:docker": "docker build -f infra/docker/api.Dockerfile -t imagepivot-api:test . && docker build -f infra/docker/user-web.Dockerfile -t imagepivot-user-web:test . && docker build -f infra/docker/admin-web.Dockerfile -t imagepivot-admin-web:test . && docker build -f infra/docker/worker.Dockerfile -t imagepivot-worker:test .",
+    "pre-commit": "powershell -ExecutionPolicy Bypass -File scripts/pre-commit-check.ps1"
   },
   "private": true,
   "engines": {

@@ -11,10 +11,8 @@ const nextConfig = {
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
   output: 'standalone', // Required for Docker
-  // Ensure standalone output is generated
-  experimental: {
-    outputFileTracingRoot: require('path').join(__dirname, '../../'),
-  },
+  // Ensure standalone output is generated (moved from experimental in Next.js 16)
+  outputFileTracingRoot: require('path').join(__dirname, '../../'),
 };
 
 const plugins = [
@@ -22,8 +20,4 @@ const plugins = [
   withNx,
 ];
 
-// Compose plugins and ensure output setting is preserved
-const config = composePlugins(...plugins)(nextConfig);
-// Explicitly set output to standalone to ensure it's not overridden
-config.output = 'standalone';
-module.exports = config;
+module.exports = composePlugins(...plugins)(nextConfig);
