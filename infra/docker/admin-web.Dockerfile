@@ -35,7 +35,14 @@ COPY --from=deps /app /app
 
 # Build Admin Web
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npx nx build admin-web --prod
+# Build with Nx, then verify standalone output exists
+RUN npx nx build admin-web --prod && \
+    (test -d /app/apps/admin-web/.next/standalone || \
+     (echo "ERROR: standalone output not found after build!" && \
+      echo "Checking build output location..." && \
+      find /app -name "standalone" -type d 2>/dev/null | head -5 && \
+      ls -la /app/apps/admin-web/.next/ 2>/dev/null || echo "No .next directory" && \
+      exit 1))
 
 # Production image
 FROM base AS runner
