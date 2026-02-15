@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "postinstall": "cd packages/database && npx prisma generate",
     "dev": "npx nx run-many --target=dev --all --parallel=4",
     "dev:api": "npx nx serve api",
     "dev:user-web": "npx nx dev user-web",

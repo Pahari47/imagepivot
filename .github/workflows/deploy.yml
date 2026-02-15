@@ -29,6 +29,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate Prisma Schema
+        working-directory: packages/database
+        run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
+
+      - name: Generate Prisma Client
+        working-directory: packages/database
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
+
       - name: Build all projects
         run: npx nx run-many --target=build --all
 
@@ -58,6 +70,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate Prisma Schema
+        working-directory: packages/database
+        run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
+
+      - name: Generate Prisma Client
+        working-directory: packages/database
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/imagepivot' }}
 
       - name: Build all projects
         run: npx nx run-many --target=build --all
