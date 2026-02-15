@@ -301,6 +301,12 @@ model Job {
   inputSizeMb Int
   error       String?
 
+  // retry bookkeeping (API-managed)
+  attempt      Int       @default(0)
+  maxAttempts  Int       @default(3)
+  retryAt      DateTime?
+  idempotencyKey String? @unique
+
   // worker routing future-ready
   region      String?     // e.g. "in-blr-1"
   workerId    String?     // unique worker instance id
@@ -317,12 +323,13 @@ model Job {
   feature     Feature     @relation(fields: [featureId], references: [id])
 
   files       JobFile[]
-  ledger      UsageLedger?
+  ledgers     UsageLedger[]
 
   @@index([userId, createdAt])
   @@index([orgId, createdAt])
   @@index([status, createdAt])
   @@index([featureId])
+  @@index([retryAt])
 }
 
 model JobFile {
@@ -372,7 +379,7 @@ model UsageDaily {
 model UsageLedger {
   id         String     @id @default(cuid())
   userId     String
-  jobId      String     @unique
+  jobId      String
   date       DateTime
   type       LedgerType // CONSUME or REFUND
   amountMb   Int
@@ -383,6 +390,7 @@ model UsageLedger {
   job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
+  @@unique([jobId, type])
 }
 
 

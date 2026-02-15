@@ -11,15 +11,15 @@ async function startServer() {
   try {
     // Test database connection
     await prisma.$connect();
-    logger.info('✅ Database connected');
+    logger.info('Database connected');
 
     // Create Express app
     const app = createApp();
 
     // Start server
-app.listen(port, host, () => {
-      logger.info(`🚀 Server running on http://${host}:${port}`);
-      logger.info(`📝 Environment: ${env.NODE_ENV}`);
+    app.listen(port, host, () => {
+      logger.info(`Server running on http://${host}:${port}`);
+      logger.info(`Environment: ${env.NODE_ENV}`);
     });
 
     // Graceful shutdown
@@ -27,7 +27,7 @@ app.listen(port, host, () => {
       logger.info(`\n${signal} received. Shutting down gracefully...`);
 
       await prisma.$disconnect();
-      logger.info('✅ Database disconnected');
+      logger.info('Database disconnected');
 
       process.exit(0);
     };

@@ -1,6 +1,7 @@
 import { prisma } from '../../prisma/client';
 import { ValidationError } from '../../libs/errors';
 import { orgService } from '../orgs/org.service';
+import { LedgerType } from '@prisma/client';
 
 /**
  * Service for checking and managing user quota
@@ -38,9 +39,7 @@ class QuotaService {
    * Get user's current daily usage (in MB)
    */
   async getUserDailyUsage(userId: string): Promise<number> {
-    // Get today's date at midnight (UTC)
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const today = this.getTodayMidnightUtc();
 
     const usage = await prisma.usageDaily.findUnique({
       where: {
@@ -113,6 +112,79 @@ class QuotaService {
     const reset = new Date(now);
     reset.setUTCHours(24, 0, 0, 0); // Next midnight UTC
     return reset;
+  }
+
+  private getTodayMidnightUtc(): Date {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return today;
+  }
+
+  /**
+   * Consume quota for a job (idempotent per job+type via UsageLedger unique constraint).
+   */
+  async consumeForJob(userId: string, jobId: string, amountMb: number): Promise<void> {
+    if (amountMb <= 0) return;
+
+    const today = this.getTodayMidnightUtc();
+
+    await prisma.$transaction(async (tx) => {
+      // Ensure daily row exists
+      await tx.usageDaily.upsert({
+        where: { userId_date: { userId, date: today } },
+        create: { userId, date: today, usedMb: 0, refundedMb: 0 },
+        update: {},
+      });
+
+      // Create ledger row first (prevents double counting if retried)
+      await tx.usageLedger.create({
+        data: {
+          userId,
+          jobId,
+          date: today,
+          type: LedgerType.CONSUME,
+          amountMb,
+        },
+      });
+
+      await tx.usageDaily.update({
+        where: { userId_date: { userId, date: today } },
+        data: { usedMb: { increment: amountMb } },
+      });
+    });
+  }
+
+  /**
+   * Refund quota for a job (idempotent per job+type via UsageLedger unique constraint).
+   */
+  async refundForJob(userId: string, jobId: string, amountMb: number): Promise<void> {
+    if (amountMb <= 0) return;
+
+    const today = this.getTodayMidnightUtc();
+
+    await prisma.$transaction(async (tx) => {
+      // Ensure daily row exists
+      await tx.usageDaily.upsert({
+        where: { userId_date: { userId, date: today } },
+        create: { userId, date: today, usedMb: 0, refundedMb: 0 },
+        update: {},
+      });
+
+      await tx.usageLedger.create({
+        data: {
+          userId,
+          jobId,
+          date: today,
+          type: LedgerType.REFUND,
+          amountMb,
+        },
+      });
+
+      await tx.usageDaily.update({
+        where: { userId_date: { userId, date: today } },
+        data: { refundedMb: { increment: amountMb } },
+      });
+    });
   }
 }
 
