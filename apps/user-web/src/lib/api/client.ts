@@ -151,6 +151,98 @@ class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  // Features endpoints
+  async getFeatures(mediaType?: 'IMAGE' | 'AUDIO' | 'VIDEO') {
+    const query = mediaType ? `?mediaType=${mediaType}` : '';
+    return this.request<{ data: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      mediaType: string;
+      isEnabled: boolean;
+      configSchema: any;
+    }> }>(`/features${query}`, {
+      method: 'GET',
+    });
+  }
+
+  async getFeatureBySlug(slug: string) {
+    return this.request<{ data: {
+      id: string;
+      slug: string;
+      title: string;
+      mediaType: string;
+      isEnabled: boolean;
+      configSchema: any;
+    } }>(`/features/${slug}`, {
+      method: 'GET',
+    });
+  }
+
+  // Jobs endpoints
+  async createJob(data: {
+    orgId: string;
+    featureSlug: string;
+    mediaType?: 'IMAGE' | 'AUDIO' | 'VIDEO';
+    input: {
+      key: string;
+      sizeBytes: number;
+      mimeType: string;
+    };
+    params?: Record<string, unknown>;
+  }) {
+    return this.request<{ data: {
+      id: string;
+      status: string;
+      featureId: string;
+      params: any;
+      inputSizeMb: number;
+      createdAt: string;
+      files: Array<{
+        id: string;
+        kind: string;
+        key: string;
+        mimeType: string;
+        sizeMb: number;
+      }>;
+    } }>('/jobs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getJob(jobId: string) {
+    return this.request<{ data: {
+      id: string;
+      status: string;
+      params: any;
+      inputSizeMb: number;
+      error?: string;
+      createdAt: string;
+      completedAt?: string;
+      files: Array<{
+        id: string;
+        kind: string;
+        key: string;
+        mimeType: string;
+        sizeMb: number;
+      }>;
+      feature: {
+        slug: string;
+        title: string;
+        mediaType: string;
+      };
+    } }>(`/jobs/${jobId}`, {
+      method: 'GET',
+    });
+  }
+
+  async getJobDownloadUrl(jobId: string) {
+    return this.request<{ data: { downloadUrl: string; expiresIn: number } }>(`/jobs/${jobId}/download`, {
+      method: 'GET',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

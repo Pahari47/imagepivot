@@ -4,6 +4,24 @@ const mediaTypeSchema = z
   .enum(['IMAGE', 'AUDIO', 'VIDEO', 'image', 'audio', 'video'])
   .transform((v) => v.toUpperCase() as 'IMAGE' | 'AUDIO' | 'VIDEO');
 
+const resizeParamsSchema = z
+  .object({
+    width: z.number().int().positive().max(10000).optional(),
+    height: z.number().int().positive().max(10000).optional(),
+    maintainAspect: z.boolean().default(true),
+    format: z.enum(['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp']).optional(),
+    quality: z.number().int().min(1).max(100).optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (!val.width && !val.height) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'At least one of width or height must be provided',
+        path: ['width'],
+      });
+    }
+  });
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -28,6 +46,19 @@ export const createJobSchema = z
         message: 'input.sizeBytes or input.sizeMb is required',
         path: ['input', 'sizeBytes'],
       });
+    }
+
+    if (val.featureSlug === 'image.resize') {
+      const paramsResult = resizeParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
     }
   });
 

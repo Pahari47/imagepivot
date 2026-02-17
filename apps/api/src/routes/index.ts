@@ -3,6 +3,7 @@ import authRoutes from '../modules/auth/auth.routes';
 import orgRoutes from '../modules/orgs/org.routes';
 import uploadRoutes from '../modules/upload/upload.routes';
 import jobsRoutes from '../modules/jobs/jobs.routes';
+import featuresRoutes from '../modules/features/features.routes';
 
 const router = Router();
 
@@ -22,6 +23,9 @@ router.use('/upload', uploadRoutes);
 
 // Jobs routes
 router.use('/jobs', jobsRoutes);
+
+// Features routes (public - no auth required)
+router.use('/features', featuresRoutes);
 
 // TODO: Add other module routes here
 // router.use('/users', userRoutes);

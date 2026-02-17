@@ -11,7 +11,7 @@ export function ToolHeader({ mediaType }: ToolHeaderProps) {
   const pathname = usePathname();
 
   const tabs = [
-    { id: 'image', label: 'Image', path: '/image/quality' },
+    { id: 'image', label: 'Image', path: '/image/resize' },
     { id: 'audio', label: 'audio', path: '/audio/quality' },
     { id: 'video', label: 'video', path: '/video/quality' },
   ];

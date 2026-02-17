@@ -18,6 +18,13 @@
           "command": "venv\\Scripts\\python.exe -m uvicorn main:app --reload --port 8000 --host 0.0.0.0",
           "cwd": "apps/worker"
         }
+      },
+      "celery": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "venv\\Scripts\\celery.exe -A celery_app worker --loglevel=info --pool=solo",
+          "cwd": "apps/worker"
+        }
       }
     }
 }

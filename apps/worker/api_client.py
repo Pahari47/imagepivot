@@ -34,8 +34,18 @@ def post_job_status(
     if worker_id:
         payload["workerId"] = worker_id
 
-    resp = requests.post(url, json=payload, headers=headers, timeout=10)
-    resp.raise_for_status()
+    print(f"[API_CLIENT] Updating job status: jobId={job_id}, status={status}, url={url}")
+    
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=10)
+        resp.raise_for_status()
+        print(f"[API_CLIENT] Job status updated successfully: jobId={job_id}, status={status}")
+    except requests.exceptions.RequestException as e:
+        print(f"[API_CLIENT] ERROR: Failed to update job status: jobId={job_id}, error={e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"[API_CLIENT] Response status: {e.response.status_code}")
+            print(f"[API_CLIENT] Response body: {e.response.text}")
+        raise
 
 
 

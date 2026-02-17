@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 import { createJobSchema } from './jobs.validation';
 import { jobsService } from './jobs.service';
+import { logger } from '../../libs/logger';
 import { JobStatus } from '@prisma/client';
 import { z } from 'zod';
 
@@ -50,7 +51,9 @@ export class JobsController {
       const userId = authReq.user!.userId;
       const { jobId } = req.params;
 
+      logger.debug('[JOB] Fetching job status', { jobId, userId });
       const job = await jobsService.getJobForUser(userId, jobId);
+      logger.debug('[JOB] Job status retrieved', { jobId, status: job.status });
       res.json({ success: true, data: job });
     } catch (error) {
       next(error);
@@ -105,6 +108,23 @@ export class JobsController {
 
       const job = await jobsService.updateJobStatusFromWorker(jobId, parsed);
       res.json({ success: true, data: job });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/jobs/:jobId/download
+   */
+  async getJobDownloadUrl(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authReq = req as AuthRequest;
+      const userId = authReq.user!.userId;
+      const { jobId } = req.params;
+      const expiresIn = req.query.expiresIn ? Number(req.query.expiresIn) : 600;
+
+      const downloadUrl = await jobsService.getJobDownloadUrl(userId, jobId, expiresIn);
+      res.json({ success: true, data: { downloadUrl, expiresIn } });
     } catch (error) {
       next(error);
     }

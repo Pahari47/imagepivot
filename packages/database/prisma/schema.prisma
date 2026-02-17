@@ -7,6 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Seed script configuration
+// Run with: npm run prisma:seed
+
 enum AuthProvider {
   EMAIL
   GOOGLE

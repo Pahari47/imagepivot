@@ -9,13 +9,25 @@ interface UploadAreaProps {
   feature: string;
   onUploadSuccess?: (file: File, uploadUrl: string, key: string) => void;
   onUploadError?: (error: string) => void;
+  showPreview?: boolean;
+  onFileSelect?: (file: File) => void;
+  selectedFile?: File | null;
 }
 
-export function UploadArea({ mediaType, feature, onUploadSuccess, onUploadError }: UploadAreaProps) {
+export function UploadArea({ 
+  mediaType, 
+  feature, 
+  onUploadSuccess, 
+  onUploadError,
+  showPreview = false,
+  onFileSelect,
+  selectedFile
+}: UploadAreaProps) {
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [localSelectedFile, setLocalSelectedFile] = useState<File | null>(selectedFile || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -43,20 +55,32 @@ export function UploadArea({ mediaType, feature, onUploadSuccess, onUploadError 
 
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
-        await handleFileUpload(files[0]);
+        const file = files[0];
+        if (showPreview && onFileSelect) {
+          setLocalSelectedFile(file);
+          onFileSelect(file);
+        } else {
+          await handleFileUpload(file);
+        }
       }
     },
-    [user, onUploadError]
+    [user, onUploadError, showPreview, onFileSelect]
   );
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (files && files.length > 0) {
-        await handleFileUpload(files[0]);
+        const file = files[0];
+        if (showPreview && onFileSelect) {
+          setLocalSelectedFile(file);
+          onFileSelect(file);
+        } else {
+          await handleFileUpload(file);
+        }
       }
     },
-    [user]
+    [user, showPreview, onFileSelect]
   );
 
   const handleFileUpload = async (file: File) => {

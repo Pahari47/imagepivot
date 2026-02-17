@@ -51,7 +51,22 @@ export interface QueueJobV1 {
 
 export async function enqueueJobV1(payload: QueueJobV1): Promise<void> {
   const client = await getRedisClient();
-  await client.rPush(JOB_QUEUE_KEY_V1, JSON.stringify(payload));
+  const payloadStr = JSON.stringify(payload);
+  
+  logger.debug('[QUEUE] Enqueuing job', {
+    jobId: payload.jobId,
+    featureSlug: payload.featureSlug,
+    mediaType: payload.mediaType,
+    queueKey: JOB_QUEUE_KEY_V1,
+  });
+  
+  await client.rPush(JOB_QUEUE_KEY_V1, payloadStr);
+  
+  logger.info('[QUEUE] Job enqueued', {
+    jobId: payload.jobId,
+    queueKey: JOB_QUEUE_KEY_V1,
+    queueLength: await client.lLen(JOB_QUEUE_KEY_V1),
+  });
 }
 
 

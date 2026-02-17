@@ -28,6 +28,7 @@ router.use(authMiddleware);
 router.post('/', jobsController.createJob.bind(jobsController));
 router.get('/', jobsController.listJobs.bind(jobsController));
 router.get('/:jobId', jobsController.getJob.bind(jobsController));
+router.get('/:jobId/download', jobsController.getJobDownloadUrl.bind(jobsController));
 router.post('/:jobId/cancel', jobsController.cancelJob.bind(jobsController));
 
 export default router;

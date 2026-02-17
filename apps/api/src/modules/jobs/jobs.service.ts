@@ -2,8 +2,10 @@ import { prisma } from '../../prisma/client';
 import { NotFoundError, ValidationError } from '../../libs/errors';
 import { orgService } from '../orgs/org.service';
 import { quotaService } from '../quota/quota.service';
+import { uploadService } from '../upload/upload.service';
 import { enqueueJobV1 } from '../../libs/queue';
 import { env } from '../../config/env';
+import { logger } from '../../libs/logger';
 import type { CreateJobInput } from './jobs.validation';
 import { JobStatus, Prisma } from '@prisma/client';
 
@@ -113,15 +115,15 @@ export class JobsService {
 
     // Push to queue
     try {
-      await enqueueJobV1({
-        version: '1.1',
+      const queuePayload = {
+        version: '1.1' as const,
         jobId: job.id,
         userId,
         orgId: input.orgId,
         mediaType: feature.mediaType,
         featureSlug: feature.slug,
         input: {
-          storage: 'R2',
+          storage: 'R2' as const,
           bucket: env.R2_BUCKET_NAME,
           key: input.input.key,
           sizeBytes,
@@ -137,8 +139,27 @@ export class JobsService {
           maxAttempts: input.maxAttempts,
           idempotencyKey,
         },
+      };
+
+      logger.info(`[JOB] Creating job ${job.id}`, {
+        featureSlug: feature.slug,
+        mediaType: feature.mediaType,
+        orgId: input.orgId,
+        userId,
+        inputSizeMb,
+      });
+
+      await enqueueJobV1(queuePayload);
+
+      logger.info(`[JOB] Job ${job.id} enqueued successfully`, {
+        jobId: job.id,
+        queueKey: 'imagepivot:jobs:v1',
       });
     } catch (err) {
+      logger.error(`[JOB] Failed to enqueue job ${job.id}`, {
+        jobId: job.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
       // Mark failed and refund quota (best-effort)
       await prisma.job.update({
         where: { id: job.id },
@@ -210,11 +231,22 @@ export class JobsService {
       workerId?: string;
     }
   ) {
+    logger.info('[JOB] Worker updating job status', {
+      jobId,
+      status: input.status,
+      workerId: input.workerId,
+      hasOutput: !!input.output,
+      error: input.error,
+    });
+
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: { files: true },
     });
-    if (!job) throw new NotFoundError('Job not found');
+    if (!job) {
+      logger.error('[JOB] Job not found for worker update', { jobId });
+      throw new NotFoundError('Job not found');
+    }
 
     if (input.status === JobStatus.PROCESSING) {
       return prisma.job.update({
@@ -277,6 +309,28 @@ export class JobsService {
     }
 
     throw new ValidationError(`Unsupported status update: ${input.status}`);
+  }
+
+  async getJobDownloadUrl(userId: string, jobId: string, expiresIn: number = 600): Promise<string> {
+    const job = await prisma.job.findFirst({
+      where: { id: jobId, userId },
+      include: { files: true },
+    });
+
+    if (!job) {
+      throw new NotFoundError('Job not found');
+    }
+
+    if (job.status !== JobStatus.COMPLETED) {
+      throw new ValidationError(`Job is not completed. Current status: ${job.status}`);
+    }
+
+    const outputFile = job.files.find((f) => f.kind === 'OUTPUT');
+    if (!outputFile || !outputFile.key) {
+      throw new NotFoundError('Output file not found');
+    }
+
+    return uploadService.generatePresignedDownloadUrl(outputFile.key, expiresIn);
   }
 }
 
