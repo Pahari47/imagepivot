@@ -18,7 +18,7 @@ export default function ImageLayout({
       <div className="flex h-screen bg-gray-50">
         <ExpandableSidebar mediaType="image" activeFeature={feature} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <ToolHeader mediaType="image" />
+          <ToolHeader mediaType="image" featureSlug={feature} />
           {children}
         </div>
       </div>

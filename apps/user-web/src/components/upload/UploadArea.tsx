@@ -172,8 +172,8 @@ export function UploadArea({
     <div className="flex-1 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{getFeatureTitle()}</h1>
+        <div className="mb-2 flex flex-col items-center justify-center">
+          <h1 className="text-3xl font-normal text-gray-900">{getFeatureTitle()}</h1>
           <p className="text-gray-600">{getFeatureDescription()}</p>
         </div>
 
@@ -182,12 +182,12 @@ export function UploadArea({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+          className={`relative border-2 bg-gray-100 border-dashed rounded-lg transition-colors ${
             isDragging
-              ? 'border-red-500 bg-red-50'
+              ? 'border-red-500'
               : isDisabled
-              ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-              : 'border-gray-300 bg-pink-50 hover:border-gray-400 cursor-pointer'
+              ? 'border-gray-300 cursor-not-allowed'
+              : 'border-gray-300 cursor-pointer'
           }`}
           onClick={() => !isDisabled && fileInputRef.current?.click()}
         >
@@ -206,49 +206,73 @@ export function UploadArea({
             disabled={isDisabled}
           />
 
-          {/* Illustration */}
-          <div className="mb-6 flex justify-center">
-            <div className="w-48 h-48 bg-gradient-to-br from-purple-200 via-yellow-200 to-blue-200 rounded-lg flex items-center justify-center">
-              <span className="text-6xl">💻</span>
-            </div>
-          </div>
-
-          {/* Text */}
-          <p className="text-lg font-medium text-gray-900 mb-2">
-            Drop or Select {mediaType}
-          </p>
-          <p className="text-sm text-gray-600 mb-4">
-            Drop {mediaType} here or click{' '}
-            <button
-              type="button"
-              className="text-red-600 hover:text-red-700 font-medium"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-            >
-              Browse
-            </button>{' '}
-            through your machine
-          </p>
-
-          {!user && (
-            <p className="text-sm text-red-600 mt-4">
-              Please login to upload and process files
-            </p>
-          )}
-
-          {isUploading && (
-            <div className="mt-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-red-600 h-2 rounded-full transition-all"
-                  style={{ width: `${uploadProgress}%` }}
+          {/* Layered border effect: outer dashed, middle solid off-white, inner pink */}
+          <div className={`border-2 rounded-lg m-3 ${
+            isDragging
+              ? 'border-red-500 bg-red-50'
+              : isDisabled
+              ? 'border-stone-100 bg-gray-50'
+              : 'border-stone-100 bg-pink-50'
+          }`}>
+            <div className={`px-16 py-8 flex flex-col items-center rounded-lg justify-center min-h-[200px] ${
+              isDragging
+                ? 'bg-red-50'
+                : isDisabled
+                ? 'bg-gray-200'
+                : 'bg-gray-200'
+            }`}>
+              {/* Center Image - constrained size */}
+              <div className="flex -mt-6 justify-center items-center">
+                <img 
+                  src="/uploadimage.png" 
+                  alt="Upload illustration"
+                  className="w-56 h-56 object-contain"
+                  style={{ width: '224px', height: '224px' }}
+                  onError={(e) => {
+                    // Fallback if image doesn't exist
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
-              <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
+
+              {/* Text */}
+              <p className="text-lg font-regular -mt-4 text-gray-900">
+                Drop or Select {mediaType}
+              </p>
+              <p className="text-sm text-gray-600">
+                Drop {mediaType} here or click{' '}
+                <button
+                  type="button"
+                  className="text-red-600 hover:text-red-700 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  Browse
+                </button>{' '}
+                through your machine
+              </p>
+
+              {!user && (
+                <p className="text-sm text-red-600 mt-4">
+                  Please login to upload and process files
+                </p>
+              )}
+
+              {isUploading && (
+                <div className="mt-4 w-full max-w-md">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-red-600 h-2 rounded-full transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

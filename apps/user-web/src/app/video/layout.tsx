@@ -18,7 +18,7 @@ export default function VideoLayout({
       <div className="flex h-screen bg-gray-50">
         <ExpandableSidebar mediaType="video" activeFeature={feature} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <ToolHeader mediaType="video" />
+          <ToolHeader mediaType="video" featureSlug={feature} />
           {children}
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { FeatureConfigProps } from '../../../../lib/features/types';
 
 export interface ResizeConfig {
   width?: number;
@@ -10,23 +11,29 @@ export interface ResizeConfig {
   quality?: number;
 }
 
-interface ImageResizeConfigProps {
-  config: ResizeConfig;
-  onChange: (config: ResizeConfig) => void;
-}
+export function ImageResizeConfig({ config, onChange }: FeatureConfigProps) {
+  const resizeConfig = config as ResizeConfig;
+  
+  const [width, setWidth] = useState<string>(resizeConfig.width?.toString() || '');
+  const [height, setHeight] = useState<string>(resizeConfig.height?.toString() || '');
+  const [maintainAspect, setMaintainAspect] = useState(resizeConfig.maintainAspect ?? true);
+  const [format, setFormat] = useState<string>(resizeConfig.format || '');
+  const [quality, setQuality] = useState<number>(resizeConfig.quality || 95);
 
-export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) {
-  const [width, setWidth] = useState<string>(config.width?.toString() || '');
-  const [height, setHeight] = useState<string>(config.height?.toString() || '');
-  const [maintainAspect, setMaintainAspect] = useState(config.maintainAspect);
-  const [format, setFormat] = useState<string>(config.format || '');
-  const [quality, setQuality] = useState<number>(config.quality || 95);
+  // Sync with external config changes
+  useEffect(() => {
+    setWidth(resizeConfig.width?.toString() || '');
+    setHeight(resizeConfig.height?.toString() || '');
+    setMaintainAspect(resizeConfig.maintainAspect ?? true);
+    setFormat(resizeConfig.format || '');
+    setQuality(resizeConfig.quality || 95);
+  }, [resizeConfig.width, resizeConfig.height, resizeConfig.maintainAspect, resizeConfig.format, resizeConfig.quality]);
 
   const handleWidthChange = (value: string) => {
     setWidth(value);
     const numValue = value ? parseInt(value, 10) : undefined;
     onChange({
-      ...config,
+      ...resizeConfig,
       width: numValue,
     });
   };
@@ -35,7 +42,7 @@ export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) 
     setHeight(value);
     const numValue = value ? parseInt(value, 10) : undefined;
     onChange({
-      ...config,
+      ...resizeConfig,
       height: numValue,
     });
   };
@@ -43,7 +50,7 @@ export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) 
   const handleMaintainAspectChange = (checked: boolean) => {
     setMaintainAspect(checked);
     onChange({
-      ...config,
+      ...resizeConfig,
       maintainAspect: checked,
     });
   };
@@ -51,7 +58,7 @@ export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) 
   const handleFormatChange = (value: string) => {
     setFormat(value);
     onChange({
-      ...config,
+      ...resizeConfig,
       format: value || undefined,
     });
   };
@@ -59,7 +66,7 @@ export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) 
   const handleQualityChange = (value: number) => {
     setQuality(value);
     onChange({
-      ...config,
+      ...resizeConfig,
       quality: value,
     });
   };
@@ -161,5 +168,4 @@ export function ImageResizeConfig({ config, onChange }: ImageResizeConfigProps) 
     </div>
   );
 }
-
 

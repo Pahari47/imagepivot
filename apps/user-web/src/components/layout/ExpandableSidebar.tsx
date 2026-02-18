@@ -20,7 +20,7 @@ interface ExpandableSidebarProps {
 interface Feature {
   id: string;
   name: string;
-  icon: string;
+  icon: string; // Image path or URL
   slug: string;
 }
 
@@ -41,17 +41,19 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
         const mappedFeatures = response.data.data.map((f) => {
           const slugParts = f.slug.split('.');
           const id = slugParts.length > 1 ? slugParts[1] : f.slug;
+          // Map feature IDs to icon image paths
+          // You can customize these paths to point to specific icons
           const iconMap: Record<string, string> = {
-            resize: '↔️',
-            compress: '🗜️',
-            convert: '🔄',
-            quality: '📈',
-            crop: '✂️',
+            resize: '/icons/feature-icon.svg',
+            compress: '/icons/feature-icon.svg',
+            convert: '/icons/feature-icon.svg',
+            quality: '/icons/feature-icon.svg',
+            crop: '/icons/feature-icon.svg',
           };
           return {
             id,
             name: f.title,
-            icon: iconMap[id] || '🖼️',
+            icon: iconMap[id] || '/icons/feature-icon.svg', // Default icon image
             slug: f.slug,
           };
         });
@@ -77,24 +79,24 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
   }, [user]);
 
   const quotaPercentage = quotaInfo ? (quotaInfo.used / quotaInfo.limit) * 100 : 0;
-  const width = isExpanded ? 'w-64' : 'w-20';
+  const width = isExpanded ? 'w-64' : 'w-24';
 
   return (
-    <div className={`${width} bg-gray-800 border-r border-gray-700 flex flex-col h-screen transition-all duration-300 relative`}>
+    <div className={`${width} bg-white border-r border-gray-300 flex flex-col h-screen transition-all duration-300 relative`}>
       {/* Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute -right-3 top-4 z-10 bg-gray-800 border border-gray-700 rounded-full p-1.5 hover:bg-gray-700 transition-colors"
+        className="absolute -right-3 top-10 z-10 bg-white border border-gray-300 rounded-lg pl-2.5 pr-2.5 hover:bg-gray-200 transition-colors"
         aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
       >
         <span className="text-gray-300 text-sm">
-          {isExpanded ? '◀' : '▶'}
+          {isExpanded ? '|⇦' : '➜|'}
         </span>
       </button>
 
       {/* Logo */}
-      <div className="p-4 border-b border-gray-700">
-        <Link href="/" className="flex items-center space-x-2">
+      <div className="p-4">
+        <Link href="/" className="flex justify-center">
           <span className="text-green-500 text-xl font-semibold">
             {isExpanded ? 'Imagepivot' : 'IP'}
           </span>
@@ -105,16 +107,16 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
       <div className="flex-1 overflow-y-auto p-4">
         {loadingFeatures ? (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
             {isExpanded && (
-              <p className="mt-2 text-sm text-gray-400">Loading...</p>
+              <p className="mt-2 text-sm text-gray-700">Loading...</p>
             )}
           </div>
         ) : (
           <div className="space-y-1">
             {features.length === 0 ? (
               isExpanded && (
-                <p className="text-sm text-gray-400 text-center py-4">No features available</p>
+                <p className="text-sm text-gray-700 text-center py-4">No features available</p>
               )
             ) : (
               features.map((feature) => {
@@ -125,16 +127,32 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
                   <Link
                     key={feature.id}
                     href={featurePath}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`${
+                      isExpanded 
+                        ? 'flex items-center space-x-3 px-4 py-3' 
+                        : 'flex flex-col items-center justify-center px-2 py-2'
+                    } rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-red-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700'
+                        ? 'bg-gray-300 text-gray-700'
+                        : 'text-gray-700 hover:bg-gray-300'
                     }`}
                     title={!isExpanded ? feature.name : undefined}
                   >
-                    <span className="text-xl flex-shrink-0">{feature.icon}</span>
-                    {isExpanded && (
+                    <img 
+                      src={feature.icon} 
+                      alt={feature.name}
+                      className={`${isExpanded ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0 object-contain`}
+                      onError={(e) => {
+                        // Fallback to a default icon if image fails to load
+                        (e.target as HTMLImageElement).src = '/icons/feature-icon.svg';
+                      }}
+                    />
+                    {isExpanded ? (
                       <span className="font-medium truncate">{feature.name}</span>
+                    ) : (
+                      <span className="text-[10px] font-medium truncate mt-1 text-center leading-tight">
+                        {feature.id}
+                      </span>
                     )}
                   </Link>
                 );
@@ -145,17 +163,17 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
       </div>
 
       {/* Bottom Section */}
-      <div className="border-t border-gray-700 p-4 space-y-4">
+      <div className="p-4 space-y-4">
         {/* Quota Progress Bar */}
         {user && quotaInfo && isExpanded && (
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-center text-sm">
               <span className="text-gray-400">Credit left</span>
-              <span className="text-gray-200 font-medium">
+              {/* <span className="text-gray-200 font-medium">
                 {quotaInfo.remaining}MB / {quotaInfo.limit}MB
-              </span>
+              </span> */}
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-300 rounded-full h-2">
               <div
                 className="bg-red-600 h-2 rounded-full transition-all"
                 style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
@@ -164,7 +182,8 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
           </div>
         )}
 
-        {!user && isExpanded && (
+        {/* Buy Premium Button */}
+        {isExpanded && (
           <Link
             href="/"
             className="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -178,16 +197,30 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
           <div className="space-y-1">
             <Link
               href="/dashboard"
-              className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center space-x-3 px-4 py-2 font-medium text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
             >
-              <span>📊</span>
+              <img 
+                src="/icons/feature-icon.svg" 
+                alt="Dashboard"
+                className="w-5 h-5 flex-shrink-0 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/icons/feature-icon.svg';
+                }}
+              />
               <span>Dashboard</span>
             </Link>
             <Link
               href="/settings"
-              className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center space-x-3 px-4 py-2 font-medium text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
             >
-              <span>⚙️</span>
+              <img 
+                src="/icons/feature-icon.svg" 
+                alt="Settings"
+                className="w-5 h-5 flex-shrink-0 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/icons/feature-icon.svg';
+                }}
+              />
               <span>Settings</span>
             </Link>
           </div>
@@ -204,7 +237,7 @@ export function ExpandableSidebar({ mediaType, activeFeature }: ExpandableSideba
               </div>
               {isExpanded && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200 truncate">{user.name || 'User'}</p>
+                  <p className="text-sm font-medium text-gray-700 truncate">{user.name || 'User'}</p>
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 </div>
               )}

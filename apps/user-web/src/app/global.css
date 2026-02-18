@@ -503,3 +503,49 @@ summary svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Processing Progress Animations */
+@keyframes cloudFloat1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes cloudFloat2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes fileMoveUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.cloud-float-1 {
+  animation: cloudFloat1 3s ease-in-out infinite;
+}
+
+.cloud-float-2 {
+  animation: cloudFloat2 3.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.file-icon-1 {
+  animation: fileMoveUp 3s linear infinite;
+  animation-delay: 0s;
+}
+
+.file-icon-2 {
+  animation: fileMoveUp 3s linear infinite;
+  animation-delay: 1s;
+}
+
+.file-icon-3 {
+  animation: fileMoveUp 3s linear infinite;
+  animation-delay: 2s;
+}

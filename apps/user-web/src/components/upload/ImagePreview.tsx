@@ -24,62 +24,41 @@ export function ImagePreview({ file, onRemove, onConfirm, isUploading = false, u
   }, [file]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Image ready to convert</h3>
-      
-      <div className="relative bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
-        {previewUrl ? (
-          <div className="flex flex-col items-center">
+    <div className="relative bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 p-2 max-h-[300px]">
+      {previewUrl ? (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="bg-gray-200 rounded-lg p-4 w-full">
             <img
               src={previewUrl}
               alt="Preview"
-              className="max-w-full max-h-96 object-contain rounded-lg mb-4"
+              className="w-full h-auto max-h-[200px] object-contain rounded-lg"
             />
-            <p className="text-sm text-gray-600">{file.name}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
           </div>
-        ) : (
-          <div className="text-center py-8">
+          {/* <p className="text-sm text-gray-600">{file.name}</p>
+          <p className="text-xs text-gray-500">
+            {(file.size / 1024 / 1024).toFixed(2)} MB
+          </p> */}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
             <p className="mt-2 text-sm text-gray-600">Loading preview...</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {isUploading && (
-          <div className="mt-4">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-red-600 h-2 rounded-full transition-all"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            <p className="text-sm text-gray-600 mt-2 text-center">
-              Uploading... {uploadProgress}%
-            </p>
+      {isUploading && (
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-red-600 h-2 rounded-full transition-all"
+              style={{ width: `${uploadProgress}%` }}
+            />
           </div>
-        )}
-      </div>
-
-      {!isUploading && (
-        <div className="flex justify-end space-x-3 mt-4">
-          {onRemove && (
-            <button
-              onClick={onRemove}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg transition-colors"
-            >
-              Change Image
-            </button>
-          )}
-          {onConfirm && (
-            <button
-              onClick={onConfirm}
-              className="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Confirm & Upload
-            </button>
-          )}
+          <p className="text-sm text-gray-600 mt-2 text-center">
+            Uploading... {uploadProgress}%
+          </p>
         </div>
       )}
     </div>

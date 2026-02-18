@@ -18,7 +18,7 @@ export default function AudioLayout({
       <div className="flex h-screen bg-gray-50">
         <ExpandableSidebar mediaType="audio" activeFeature={feature} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <ToolHeader mediaType="audio" />
+          <ToolHeader mediaType="audio" featureSlug={feature} />
           {children}
         </div>
       </div>
