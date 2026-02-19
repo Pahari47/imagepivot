@@ -22,6 +22,12 @@ const resizeParamsSchema = z
     }
   });
 
+const compressParamsSchema = z.object({
+  quality: z.number().int().min(1).max(100).optional(),
+  format: z.enum(['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp']).optional(),
+  optimize: z.boolean().default(true),
+});
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -50,6 +56,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'image.resize') {
       const paramsResult = resizeParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'image.compress') {
+      const paramsResult = compressParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

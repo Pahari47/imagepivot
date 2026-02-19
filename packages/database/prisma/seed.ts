@@ -72,6 +72,35 @@ async function main() {
         ],
       },
     },
+    {
+      slug: 'image.compress',
+      title: 'Image Compress',
+      mediaType: MediaType.IMAGE,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          quality: {
+            type: 'number',
+            description: 'Quality for JPEG/WebP (1-100). Lower values = smaller file size',
+            minimum: 1,
+            maximum: 100,
+            default: 85,
+          },
+          format: {
+            type: 'string',
+            enum: ['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp'],
+            description: 'Output image format (optional, keeps original if not specified)',
+          },
+          optimize: {
+            type: 'boolean',
+            description: 'Enable image optimization',
+            default: true,
+          },
+        },
+        required: [],
+      },
+    },
   ];
 
   for (const feature of features) {

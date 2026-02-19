@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface ImagePreviewProps {
-  file: File;
+  file: File | null;
   onRemove?: () => void;
   onConfirm?: () => void;
   isUploading?: boolean;

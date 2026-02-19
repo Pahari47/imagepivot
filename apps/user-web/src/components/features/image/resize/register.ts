@@ -10,7 +10,7 @@ export function registerResizeFeature(): void {
     defaultConfig: {
       maintainAspect: true,
       quality: 95,
-    } as ResizeConfig,
+    },
 
     validate: (config: Record<string, unknown>): string | null => {
       const resizeConfig = config as ResizeConfig;

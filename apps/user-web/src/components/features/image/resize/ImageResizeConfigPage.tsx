@@ -60,7 +60,7 @@ export function ImageResizeConfigPage({
               </div>
             )}
             <ImageResizeConfig
-              config={resizeConfig}
+              config={config}
               onChange={onChange}
               selectedFile={selectedFile}
             />

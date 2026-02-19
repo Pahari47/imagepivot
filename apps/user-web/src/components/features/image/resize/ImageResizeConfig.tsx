@@ -6,7 +6,7 @@ import { FeatureConfigProps } from '../../../../lib/features/types';
 export interface ResizeConfig {
   width?: number;
   height?: number;
-  maintainAspect: boolean;
+  maintainAspect?: boolean;
   format?: string;
   quality?: number;
 }

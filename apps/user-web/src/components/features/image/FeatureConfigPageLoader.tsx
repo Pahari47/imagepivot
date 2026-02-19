@@ -2,6 +2,7 @@
 
 import { FeatureConfigPageProps } from '../../../lib/features/types';
 import { ImageResizeConfigPage } from './resize/ImageResizeConfigPage';
+import { ImageCompressConfigPage } from './compress/ImageCompressConfigPage';
 
 /**
  * Dynamically loads the appropriate feature config page component
@@ -15,10 +16,10 @@ export function FeatureConfigPageLoader({ featureSlug, ...props }: FeatureConfig
   switch (featureSlug) {
     case 'resize':
       return <ImageResizeConfigPage {...props} />;
+    case 'compress':
+      return <ImageCompressConfigPage {...props} />;
     
     // Add more features here as they're created:
-    // case 'compress':
-    //   return <ImageCompressConfigPage {...props} />;
     // case 'crop':
     //   return <ImageCropConfigPage {...props} />;
     

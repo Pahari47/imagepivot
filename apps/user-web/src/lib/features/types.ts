@@ -28,7 +28,7 @@ export interface FeatureConfigProps {
 export interface FeatureConfigPageProps {
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
-  selectedFile: File;
+  selectedFile: File | null;
   onRemoveFile: () => void;
   onProcess: () => void;
   error?: string | null;

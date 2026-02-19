@@ -49,7 +49,10 @@ export function useJobStatus({ jobId, pollInterval = 2000, enabled = true }: Use
       if (response.success && response.data?.data) {
         const jobData = response.data.data;
         console.log(`[FRONTEND] Job status poll: jobId=${jobId}, status=${jobData.status}`);
-        setJob(jobData);
+        setJob({
+          ...jobData,
+          status: jobData.status as JobStatus,
+        });
       } else {
         console.error(`[FRONTEND] Failed to fetch job ${jobId}:`, response.error);
         setError(response.error || 'Failed to fetch job status');

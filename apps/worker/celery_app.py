@@ -12,7 +12,7 @@ celery_app = Celery(
     "imagepivot_worker",
     broker=_redis_url(),
     backend=_redis_url(),
-    include=["tasks.process_job", "tasks.image.resize"],
+    include=["tasks.process_job", "tasks.image"],
 )
 
 # Windows doesn't support prefork pool, use solo pool instead

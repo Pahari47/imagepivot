@@ -212,15 +212,23 @@ function ImageFeaturePageContent({ featureSlug }: { featureSlug: string }) {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
-          <FeatureConfigPageLoader
-            featureSlug={featureSlug}
-            config={config}
-            onChange={setConfig}
-            selectedFile={selectedFile}
-            onRemoveFile={handleRemoveFile}
-            onProcess={handleConfigNext}
-            error={error}
-          />
+          {selectedFile ? (
+            <FeatureConfigPageLoader
+              featureSlug={featureSlug}
+              config={config}
+              onChange={setConfig}
+              selectedFile={selectedFile}
+              onRemoveFile={handleRemoveFile}
+              onProcess={handleConfigNext}
+              error={error}
+            />
+          ) : (
+            <div className="p-8">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <p className="text-sm text-yellow-800">No file selected. Please go back and select a file.</p>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         // Constrained width container for upload and processing steps
