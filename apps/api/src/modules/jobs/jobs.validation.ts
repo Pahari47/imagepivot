@@ -74,6 +74,20 @@ const convertParamsSchema = z
     }
   });
 
+const audioCompressParamsSchema = z.object({
+  bitrate: z.number().int().min(64).max(320),
+  vbr: z.boolean().default(false).optional(),
+  sampleRate: z.union([
+    z.literal(8000),
+    z.literal(11025),
+    z.literal(16000),
+    z.literal(22050),
+    z.literal(44100),
+    z.literal(48000),
+  ]).optional(),
+  format: z.enum(['mp3', 'aac', 'ogg', 'm4a']).default('mp3').optional(),
+});
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -154,6 +168,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'audio.convert') {
       const paramsResult = convertParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'audio.compress') {
+      const paramsResult = audioCompressParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

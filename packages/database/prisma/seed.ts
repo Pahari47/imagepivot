@@ -232,6 +232,41 @@ async function main() {
         required: ['format'],
       },
     },
+    {
+      slug: 'audio.compress',
+      title: 'Audio Compress',
+      mediaType: MediaType.AUDIO,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          bitrate: {
+            type: 'number',
+            description: 'Target bitrate in kbps (64-320)',
+            minimum: 64,
+            maximum: 320,
+            default: 192,
+          },
+          vbr: {
+            type: 'boolean',
+            description: 'Use Variable Bitrate (VBR) for better quality at same file size',
+            default: false,
+          },
+          sampleRate: {
+            type: 'number',
+            description: 'Target sample rate in Hz (8000, 11025, 16000, 22050, 44100, 48000). Lower values reduce file size',
+            enum: [8000, 11025, 16000, 22050, 44100, 48000],
+          },
+          format: {
+            type: 'string',
+            enum: ['mp3', 'aac', 'ogg', 'm4a'],
+            description: 'Output format for compression (lossy formats only)',
+            default: 'mp3',
+          },
+        },
+        required: ['bitrate'],
+      },
+    },
   ];
 
   for (const feature of features) {

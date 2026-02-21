@@ -7,14 +7,16 @@
 import { registerTrimFeature } from './trim/register';
 // Register convert feature
 import { registerConvertFeature } from './convert/register';
+// Register compress feature
+import { registerCompressFeature } from './compress/register';
 
 // Initialize all audio features
 export function registerAudioFeatures(): void {
   registerTrimFeature();
   registerConvertFeature();
+  registerCompressFeature();
   
   // Add more features here as they're created:
-  // registerCompressFeature();
   // registerNormalizeFeature();
   // registerMetadataFeature();
   // etc.

@@ -258,3 +258,90 @@ def convert_audio(
     
     print(f"[AUDIO_PROCESSOR] Audio converted and exported successfully")
 
+
+def compress_audio(
+    input_path: str,
+    output_path: str,
+    bitrate: int,
+    vbr: bool = False,
+    sample_rate: Optional[int] = None,
+    output_format: str = "mp3",
+) -> None:
+    """
+    Compress audio file to reduce file size.
+    
+    Args:
+        input_path: Path to input audio file
+        output_path: Path to save output audio file
+        bitrate: Target bitrate in kbps (64-320)
+        vbr: Use Variable Bitrate (VBR) for better quality at same file size
+        sample_rate: Target sample rate in Hz (8000, 11025, 16000, 22050, 44100, 48000)
+        output_format: Output format (mp3, aac, ogg, m4a)
+    """
+    if AudioSegment is None:
+        raise RuntimeError("pydub is not installed. Please install pydub and ffmpeg.")
+    
+    if bitrate < 64 or bitrate > 320:
+        raise ValueError("bitrate must be between 64 and 320 kbps")
+    
+    print(f"[AUDIO_PROCESSOR] Loading audio file for compression: {input_path}")
+    try:
+        audio = AudioSegment.from_file(input_path)
+    except CouldntDecodeError as e:
+        raise ValueError(f"Could not decode audio file: {e}")
+    except Exception as e:
+        raise ValueError(f"Error loading audio file: {e}")
+    
+    duration_ms = len(audio)
+    duration_seconds = duration_ms / 1000.0
+    original_sample_rate = audio.frame_rate
+    
+    print(f"[AUDIO_PROCESSOR] Audio duration: {duration_seconds:.2f} seconds")
+    print(f"[AUDIO_PROCESSOR] Original sample rate: {original_sample_rate} Hz")
+    
+    # Apply sample rate conversion if specified
+    if sample_rate and sample_rate != original_sample_rate:
+        print(f"[AUDIO_PROCESSOR] Resampling from {original_sample_rate} Hz to {sample_rate} Hz")
+        audio = audio.set_frame_rate(sample_rate)
+    
+    # Map user format to pydub format
+    pydub_format = get_pydub_format(output_format)
+    print(f"[AUDIO_PROCESSOR] Compressing to format: {output_format} (pydub format: {pydub_format})")
+    print(f"[AUDIO_PROCESSOR] Target bitrate: {bitrate}k, VBR: {vbr}")
+    
+    try:
+        export_params = {"format": pydub_format}
+        
+        # Set bitrate
+        if output_format == "mp3":
+            export_params["bitrate"] = f"{bitrate}k"
+            if vbr:
+                # VBR for MP3: use parameters to enable VBR mode
+                # VBR quality scale: 0 (best) to 9 (worst)
+                # Map bitrate to approximate VBR quality
+                if bitrate >= 256:
+                    vbr_quality = "0"
+                elif bitrate >= 192:
+                    vbr_quality = "2"
+                elif bitrate >= 128:
+                    vbr_quality = "4"
+                elif bitrate >= 96:
+                    vbr_quality = "6"
+                else:
+                    vbr_quality = "8"
+                # Use parameters to pass ffmpeg VBR options
+                if "parameters" not in export_params:
+                    export_params["parameters"] = []
+                export_params["parameters"].extend(["-q:a", vbr_quality])
+        elif output_format == "aac" or output_format == "m4a":
+            export_params["codec"] = "aac"
+            export_params["bitrate"] = f"{bitrate}k"
+        elif output_format == "ogg":
+            export_params["bitrate"] = f"{bitrate}k"
+        
+        audio.export(output_path, **export_params)
+    except Exception as e:
+        raise ValueError(f"Error compressing audio: {e}")
+    
+    print(f"[AUDIO_PROCESSOR] Audio compressed successfully")
+
