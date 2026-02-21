@@ -23,6 +23,7 @@ export function UploadArea({
   onFileSelect,
   selectedFile
 }: UploadAreaProps) {
+  console.log('[UploadArea] Rendering with mediaType:', mediaType, 'feature:', feature);
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -56,7 +57,7 @@ export function UploadArea({
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
         const file = files[0];
-        if (showPreview && onFileSelect) {
+        if (onFileSelect) {
           setLocalSelectedFile(file);
           onFileSelect(file);
         } else {
@@ -64,7 +65,7 @@ export function UploadArea({
         }
       }
     },
-    [user, onUploadError, showPreview, onFileSelect]
+    [user, onUploadError, onFileSelect]
   );
 
   const handleFileSelect = useCallback(
@@ -72,7 +73,7 @@ export function UploadArea({
       const files = e.target.files;
       if (files && files.length > 0) {
         const file = files[0];
-        if (showPreview && onFileSelect) {
+        if (onFileSelect) {
           setLocalSelectedFile(file);
           onFileSelect(file);
         } else {
@@ -80,7 +81,7 @@ export function UploadArea({
         }
       }
     },
-    [user, showPreview, onFileSelect]
+    [user, onFileSelect]
   );
 
   const handleFileUpload = async (file: File) => {
@@ -147,6 +148,22 @@ export function UploadArea({
   };
 
   const getFeatureTitle = () => {
+    if (mediaType === 'audio') {
+      const titles: Record<string, string> = {
+        trim: 'Trim your audio',
+        compress: 'Compress your audio',
+        convert: 'Convert your audio',
+      };
+      return titles[feature] || 'Process your audio';
+    }
+    if (mediaType === 'video') {
+      const titles: Record<string, string> = {
+        trim: 'Trim your video',
+        compress: 'Compress your video',
+        convert: 'Convert your video',
+      };
+      return titles[feature] || 'Process your video';
+    }
     const titles: Record<string, string> = {
       quality: 'Change quality of your image',
       resize: 'Resize your image',
@@ -157,6 +174,22 @@ export function UploadArea({
   };
 
   const getFeatureDescription = () => {
+    if (mediaType === 'audio') {
+      const descriptions: Record<string, string> = {
+        trim: 'Upload audio and select options to trim it',
+        compress: 'Upload audio and reduce file size',
+        convert: 'Upload audio and convert it to different format',
+      };
+      return descriptions[feature] || 'Upload your audio file to get started';
+    }
+    if (mediaType === 'video') {
+      const descriptions: Record<string, string> = {
+        trim: 'Upload video and select time range to trim it',
+        compress: 'Upload video and reduce file size',
+        convert: 'Upload video and convert it to different format',
+      };
+      return descriptions[feature] || 'Upload your video file to get started';
+    }
     const descriptions: Record<string, string> = {
       quality: 'Upload image and select resolution to turn it in your desire quality',
       resize: 'Upload image and select dimensions to resize it',

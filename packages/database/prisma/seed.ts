@@ -176,6 +176,33 @@ async function main() {
         required: ['quality'],
       },
     },
+    {
+      slug: 'audio.trim',
+      title: 'Audio Trim',
+      mediaType: MediaType.AUDIO,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          startTime: {
+            type: 'number',
+            description: 'Start time in seconds',
+            minimum: 0,
+          },
+          endTime: {
+            type: 'number',
+            description: 'End time in seconds',
+            minimum: 0,
+          },
+          format: {
+            type: 'string',
+            enum: ['mp3', 'wav', 'aac', 'm4a', 'ogg', 'flac', 'webm', 'opus'],
+            description: 'Output audio format (optional, keeps original if not specified)',
+          },
+        },
+        required: ['startTime', 'endTime'],
+      },
+    },
   ];
 
   for (const feature of features) {

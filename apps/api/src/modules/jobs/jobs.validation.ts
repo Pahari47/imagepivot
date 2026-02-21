@@ -34,6 +34,22 @@ const qualityParamsSchema = z.object({
   optimize: z.boolean().default(true),
 });
 
+const trimParamsSchema = z
+  .object({
+    startTime: z.number().min(0),
+    endTime: z.number().min(0),
+    format: z.enum(['mp3', 'wav', 'aac', 'm4a', 'ogg', 'flac', 'webm', 'opus']).optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.endTime <= val.startTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'endTime must be greater than startTime',
+        path: ['endTime'],
+      });
+    }
+  });
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -88,6 +104,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'image.quality') {
       const paramsResult = qualityParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'audio.trim') {
+      const paramsResult = trimParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

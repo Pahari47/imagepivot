@@ -10,8 +10,11 @@ export default function AudioLayout({
 }: {
   children: React.ReactNode;
 }) {
+  console.log('[AudioLayout] Rendering');
   const pathname = usePathname();
-  const feature = pathname.split('/').pop() || 'quality';
+  console.log('[AudioLayout] Pathname:', pathname);
+  const feature = pathname.split('/').pop() || 'trim';
+  console.log('[AudioLayout] Feature:', feature);
 
   return (
     <AuthProviderWrapper>

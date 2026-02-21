@@ -36,7 +36,11 @@ def process_job(payload: Dict[str, Any]) -> Dict[str, Any]:
             print(f"[CELERY] Job {job_id} completed successfully", flush=True)
             return result
         elif media_type == "AUDIO":
-            raise NotImplementedError("Audio features not yet implemented")
+            print(f"[CELERY] Routing to audio feature handler: {feature_slug}", flush=True)
+            from tasks.audio import route_audio_feature
+            result = route_audio_feature(payload)
+            print(f"[CELERY] Job {job_id} completed successfully", flush=True)
+            return result
         elif media_type == "VIDEO":
             raise NotImplementedError("Video features not yet implemented")
         else:
