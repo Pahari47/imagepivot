@@ -124,6 +124,29 @@ async function main() {
         required: ['format'],
       },
     },
+    {
+      slug: 'image.convert-jpg',
+      title: 'Convert JPG',
+      mediaType: MediaType.IMAGE,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          format: {
+            type: 'string',
+            enum: ['jpeg', 'jpg', 'png', 'svg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'ico', 'heic', 'avif'],
+            description: 'Output image format',
+          },
+          conversionType: {
+            type: 'string',
+            enum: ['to', 'from'],
+            description: 'Conversion type: "to" for converting to JPG, "from" for converting from JPG',
+            default: 'to',
+          },
+        },
+        required: ['format'],
+      },
+    },
   ];
 
   for (const feature of features) {

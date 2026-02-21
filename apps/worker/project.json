@@ -22,7 +22,7 @@
       "celery": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "venv\\Scripts\\celery.exe -A celery_app worker --loglevel=info --pool=solo",
+          "command": "venv\\Scripts\\python.exe -u -m celery -A celery_app worker --loglevel=info --pool=solo --without-gossip --without-mingle --without-heartbeat",
           "cwd": "apps/worker"
         }
       }

@@ -4,6 +4,7 @@ import { FeatureConfigPageProps } from '../../../lib/features/types';
 import { ImageResizeConfigPage } from './resize/ImageResizeConfigPage';
 import { ImageCompressConfigPage } from './compress/ImageCompressConfigPage';
 import { ImageConvertConfigPage } from './convert/ImageConvertConfigPage';
+import { ImageConvertJpgConfigPage } from './convert-jpg/ImageConvertJpgConfigPage';
 
 /**
  * Dynamically loads the appropriate feature config page component
@@ -21,6 +22,8 @@ export function FeatureConfigPageLoader({ featureSlug, ...props }: FeatureConfig
       return <ImageCompressConfigPage {...props} />;
     case 'convert':
       return <ImageConvertConfigPage {...props} />;
+    case 'convert-jpg':
+      return <ImageConvertJpgConfigPage {...props} />;
     
     // Add more features here as they're created:
     // case 'crop':

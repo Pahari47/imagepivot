@@ -9,12 +9,15 @@ import { registerResizeFeature } from './resize/register';
 import { registerCompressFeature } from './compress/register';
 // Register convert feature
 import { registerConvertFeature } from './convert/register';
+// Register convert-jpg feature
+import { registerConvertJpgFeature } from './convert-jpg/register';
 
 // Initialize all image features
 export function registerImageFeatures(): void {
   registerResizeFeature();
   registerCompressFeature();
   registerConvertFeature();
+  registerConvertJpgFeature();
   
   // Add more features here as they're created:
   // registerCropFeature();
