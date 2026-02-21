@@ -345,3 +345,84 @@ def compress_audio(
     
     print(f"[AUDIO_PROCESSOR] Audio compressed successfully")
 
+
+def normalize_audio(
+    input_path: str,
+    output_path: str,
+    target_level: float = -16.0,
+    output_format: Optional[str] = None,
+) -> None:
+    """
+    Normalize audio file to target loudness level using FFmpeg's loudnorm filter.
+    
+    Args:
+        input_path: Path to input audio file
+        output_path: Path to save output audio file
+        target_level: Target loudness level in LUFS (default: -16.0, industry standard)
+        output_format: Output format (mp3, wav, flac, aac, ogg, m4a). If None, uses input format
+    """
+    if AudioSegment is None:
+        raise RuntimeError("pydub is not installed. Please install pydub and ffmpeg.")
+    
+    if target_level < -23.0 or target_level > -12.0:
+        raise ValueError("target_level must be between -23.0 and -12.0 LUFS")
+    
+    print(f"[AUDIO_PROCESSOR] Loading audio file for normalization: {input_path}")
+    try:
+        audio = AudioSegment.from_file(input_path)
+    except CouldntDecodeError as e:
+        raise ValueError(f"Could not decode audio file: {e}")
+    except Exception as e:
+        raise ValueError(f"Error loading audio file: {e}")
+    
+    duration_ms = len(audio)
+    duration_seconds = duration_ms / 1000.0
+    
+    print(f"[AUDIO_PROCESSOR] Audio duration: {duration_seconds:.2f} seconds")
+    print(f"[AUDIO_PROCESSOR] Normalizing to target level: {target_level} LUFS")
+    
+    # Determine output format
+    if output_format:
+        output_format = output_format.lower()
+        pydub_format = get_pydub_format(output_format)
+        output_ext = get_extension_from_format(output_format)
+    else:
+        # Use input format
+        input_ext = Path(input_path).suffix.lower()
+        format_map = {
+            ".mp3": "mp3",
+            ".wav": "wav",
+            ".aac": "ipod",  # AAC uses ipod format
+            ".m4a": "ipod",
+            ".ogg": "ogg",
+            ".flac": "flac",
+            ".webm": "webm",
+            ".opus": "opus",
+        }
+        pydub_format = format_map.get(input_ext, "mp3")
+        output_ext = input_ext or ".mp3"
+    
+    print(f"[AUDIO_PROCESSOR] Exporting to format: {pydub_format if output_format else 'original'}, path: {output_path}")
+    
+    try:
+        # Use FFmpeg's loudnorm filter for normalization
+        # loudnorm filter parameters:
+        # - I: integrated loudness target (LUFS)
+        # - TP: true peak target (dB)
+        # - LRA: loudness range target (LU)
+        # - dual_mono: treat mono as dual-mono
+        # Single-pass mode (faster, good enough for most cases)
+        export_params = {
+            "format": pydub_format,
+            "parameters": [
+                "-af",
+                f"loudnorm=I={target_level}:TP=-1.5:LRA=11"
+            ]
+        }
+        
+        audio.export(output_path, **export_params)
+    except Exception as e:
+        raise ValueError(f"Error normalizing audio: {e}")
+    
+    print(f"[AUDIO_PROCESSOR] Audio normalized successfully")
+

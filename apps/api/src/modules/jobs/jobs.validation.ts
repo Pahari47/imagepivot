@@ -88,6 +88,11 @@ const audioCompressParamsSchema = z.object({
   format: z.enum(['mp3', 'aac', 'ogg', 'm4a']).default('mp3').optional(),
 });
 
+const audioNormalizeParamsSchema = z.object({
+  targetLevel: z.number().min(-23).max(-12).default(-16).optional(),
+  format: z.enum(['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a']).optional(),
+});
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -181,6 +186,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'audio.compress') {
       const paramsResult = audioCompressParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'audio.normalize') {
+      const paramsResult = audioNormalizeParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

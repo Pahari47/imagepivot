@@ -9,6 +9,9 @@ print("[ROUTE-MODULE] convert_audio_task imported successfully", flush=True)
 print("[ROUTE-MODULE] Importing compress_audio_task...", flush=True)
 from tasks.audio.compress import compress_audio_task
 print("[ROUTE-MODULE] compress_audio_task imported successfully", flush=True)
+print("[ROUTE-MODULE] Importing normalize_audio_task...", flush=True)
+from tasks.audio.normalize import normalize_audio_task
+print("[ROUTE-MODULE] normalize_audio_task imported successfully", flush=True)
 
 
 def route_audio_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -25,7 +28,7 @@ def route_audio_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
     print(f"[ROUTE] Job ID: {job_id}", flush=True)
     print(f"[ROUTE] Feature Slug: '{feature_slug}'", flush=True)
     print(f"[ROUTE] Params: {params}", flush=True)
-    print(f"[ROUTE] Available handlers: trim, convert, compress", flush=True)
+    print(f"[ROUTE] Available handlers: trim, convert, compress, normalize", flush=True)
     
     if feature_slug == "audio.trim":
         print(f"[ROUTE] Routing to trim_audio_task", flush=True)
@@ -36,6 +39,9 @@ def route_audio_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
     elif feature_slug == "audio.compress":
         print(f"[ROUTE] Routing to compress_audio_task", flush=True)
         return compress_audio_task(payload)
+    elif feature_slug == "audio.normalize":
+        print(f"[ROUTE] Routing to normalize_audio_task", flush=True)
+        return normalize_audio_task(payload)
     else:
         error_msg = f"Unknown audio feature: {feature_slug}"
         print(f"[ROUTE] ========== ERROR ==========", flush=True)

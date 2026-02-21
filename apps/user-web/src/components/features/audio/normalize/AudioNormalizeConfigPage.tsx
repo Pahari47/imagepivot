@@ -1,10 +1,10 @@
 'use client';
 
 import { FeatureConfigPageProps } from '../../../../lib/features/types';
-import { AudioConvertConfig } from './AudioConvertConfig';
-import { ConvertConfig } from './AudioConvertConfig';
+import { AudioNormalizeConfig } from './AudioNormalizeConfig';
+import { NormalizeConfig } from './AudioNormalizeConfig';
 
-export function AudioConvertConfigPage({
+export function AudioNormalizeConfigPage({
   config,
   onChange,
   selectedFile,
@@ -12,13 +12,13 @@ export function AudioConvertConfigPage({
   onProcess,
   error
 }: FeatureConfigPageProps) {
-  const convertConfig = config as ConvertConfig;
+  const normalizeConfig = config as NormalizeConfig;
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-900 text-center">Convert your audio</h2>
+      <h2 className="text-2xl font-semibold text-gray-900 text-center">Normalize your audio</h2>
       <p className="text-gray-600 text-sm text-center">
-        Convert your audio file to a different format
+        Adjust audio volume to a consistent loudness level
       </p>
       <div className="grid grid-cols-2 gap-6 mt-6">
         {/* Left Section: File Info */}
@@ -41,7 +41,7 @@ export function AudioConvertConfigPage({
           )}
         </div>
 
-        {/* Right Section: Convert Configuration */}
+        {/* Right Section: Normalize Configuration */}
         <div className="p-6">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -64,13 +64,13 @@ export function AudioConvertConfigPage({
               className="flex items-center p-2 justify-center gap-1 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
-              Convert Audio
+              Normalize Audio
             </button>
           </div>
 
-          <AudioConvertConfig
+          <AudioNormalizeConfig
             config={config}
             onChange={onChange}
             selectedFile={selectedFile}
@@ -80,8 +80,5 @@ export function AudioConvertConfigPage({
     </div>
   );
 }
-
-
-
 
 

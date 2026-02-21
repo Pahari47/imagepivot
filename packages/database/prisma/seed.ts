@@ -267,6 +267,30 @@ async function main() {
         required: ['bitrate'],
       },
     },
+    {
+      slug: 'audio.normalize',
+      title: 'Audio Normalize',
+      mediaType: MediaType.AUDIO,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          targetLevel: {
+            type: 'number',
+            description: 'Target loudness level in LUFS (Loudness Units relative to Full Scale). Default: -16 LUFS (industry standard)',
+            minimum: -23,
+            maximum: -12,
+            default: -16,
+          },
+          format: {
+            type: 'string',
+            enum: ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'],
+            description: 'Output format (optional, keeps original if not specified)',
+          },
+        },
+        required: [],
+      },
+    },
   ];
 
   for (const feature of features) {
