@@ -50,6 +50,30 @@ const trimParamsSchema = z
     }
   });
 
+const convertParamsSchema = z
+  .object({
+    format: z.enum(['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'alac', 'm4a']),
+    quality: z.enum(['low', 'medium', 'high', 'custom']).optional().default('medium'),
+    bitrate: z.number().int().min(64).max(320).optional(),
+  })
+  .superRefine((val, ctx) => {
+    const lossyFormats = ['mp3', 'aac', 'ogg'];
+    if (val.quality === 'custom' && !val.bitrate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'bitrate is required when quality is custom',
+        path: ['bitrate'],
+      });
+    }
+    if (val.quality === 'custom' && val.bitrate && (val.bitrate < 64 || val.bitrate > 320)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'bitrate must be between 64 and 320 kbps',
+        path: ['bitrate'],
+      });
+    }
+  });
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -117,6 +141,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'audio.trim') {
       const paramsResult = trimParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'audio.convert') {
+      const paramsResult = convertParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

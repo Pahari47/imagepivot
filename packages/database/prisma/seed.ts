@@ -203,6 +203,35 @@ async function main() {
         required: ['startTime', 'endTime'],
       },
     },
+    {
+      slug: 'audio.convert',
+      title: 'Audio Convert',
+      mediaType: MediaType.AUDIO,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          format: {
+            type: 'string',
+            enum: ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'alac', 'm4a'],
+            description: 'Target audio format',
+          },
+          quality: {
+            type: 'string',
+            enum: ['low', 'medium', 'high', 'custom'],
+            description: 'Quality preset for lossy formats (low=96k, medium=192k, high=320k)',
+            default: 'medium',
+          },
+          bitrate: {
+            type: 'number',
+            description: 'Custom bitrate in kbps (only used when quality is custom)',
+            minimum: 64,
+            maximum: 320,
+          },
+        },
+        required: ['format'],
+      },
+    },
   ];
 
   for (const feature of features) {

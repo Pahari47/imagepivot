@@ -44,8 +44,43 @@ def get_extension_from_format(format: str) -> str:
         "flac": ".flac",
         "webm": ".webm",
         "opus": ".opus",
+        "wma": ".wma",
+        "alac": ".m4a",
     }
     return format_to_ext.get(format.lower(), ".mp3")
+
+
+def get_bitrate_from_quality(quality: str) -> int:
+    """Convert quality preset to bitrate in kbps."""
+    quality_map = {
+        "low": 96,
+        "medium": 192,
+        "high": 320,
+    }
+    return quality_map.get(quality.lower(), 192)
+
+
+def get_pydub_format(format: str) -> str:
+    """
+    Convert user-friendly format name to pydub-compatible format.
+    
+    Some formats need special handling:
+    - AAC: Use 'ipod' format (MP4/M4A container with AAC codec)
+    - ALAC: Use 'ipod' format (MP4/M4A container with ALAC codec)
+    - WMA: Use 'asf' container (Advanced Systems Format)
+    """
+    format = format.lower()
+    format_map = {
+        "mp3": "mp3",
+        "wav": "wav",
+        "flac": "flac",
+        "aac": "ipod",  # AAC in MP4/M4A container (pydub uses 'ipod' for M4A)
+        "m4a": "ipod",  # MP4/M4A container (pydub uses 'ipod' for M4A)
+        "ogg": "ogg",
+        "wma": "asf",  # WMA uses ASF container
+        "alac": "ipod",  # ALAC in MP4/M4A container (pydub uses 'ipod' for M4A)
+    }
+    return format_map.get(format, "mp3")
 
 
 def trim_audio(
@@ -129,4 +164,97 @@ def trim_audio(
         raise ValueError(f"Error exporting audio: {e}")
     
     print(f"[AUDIO_PROCESSOR] Audio trimmed and exported successfully")
+
+
+def convert_audio(
+    input_path: str,
+    output_path: str,
+    output_format: str,
+    quality: Optional[str] = None,
+    bitrate: Optional[int] = None,
+) -> None:
+    """
+    Convert audio file to a different format.
+    
+    Args:
+        input_path: Path to input audio file
+        output_path: Path to save output audio file
+        output_format: Target format (mp3, wav, flac, aac, ogg, wma, alac, m4a)
+        quality: Quality preset for lossy formats (low=96k, medium=192k, high=320k)
+        bitrate: Custom bitrate in kbps (only used when quality is 'custom')
+    """
+    if AudioSegment is None:
+        raise RuntimeError("pydub is not installed. Please install pydub and ffmpeg.")
+    
+    output_format = output_format.lower()
+    # Lossy formats that support bitrate/quality settings
+    lossy_formats = ["mp3", "aac", "ogg", "wma", "m4a"]
+    # ALAC is lossless, so exclude it from lossy
+    is_lossy = output_format in lossy_formats and output_format != "alac"
+    
+    print(f"[AUDIO_PROCESSOR] Loading audio file: {input_path}")
+    
+    try:
+        audio = AudioSegment.from_file(input_path)
+    except CouldntDecodeError as e:
+        raise ValueError(f"Could not decode audio file: {e}")
+    except Exception as e:
+        raise ValueError(f"Error loading audio file: {e}")
+    
+    duration_ms = len(audio)
+    duration_seconds = duration_ms / 1000.0
+    
+    print(f"[AUDIO_PROCESSOR] Audio duration: {duration_seconds:.2f} seconds")
+    print(f"[AUDIO_PROCESSOR] Converting to format: {output_format}")
+    
+    # Determine bitrate for lossy formats
+    export_bitrate = None
+    if is_lossy:
+        if quality == "custom" and bitrate:
+            export_bitrate = f"{bitrate}k"
+            print(f"[AUDIO_PROCESSOR] Using custom bitrate: {export_bitrate}")
+        elif quality:
+            bitrate_kbps = get_bitrate_from_quality(quality)
+            export_bitrate = f"{bitrate_kbps}k"
+            print(f"[AUDIO_PROCESSOR] Using quality preset '{quality}': {export_bitrate}")
+        else:
+            # Default to medium quality
+            export_bitrate = "192k"
+            print(f"[AUDIO_PROCESSOR] Using default bitrate: {export_bitrate}")
+    
+    # Map user format to pydub format (AAC -> m4a, ALAC -> m4a, etc.)
+    pydub_format = get_pydub_format(output_format)
+    print(f"[AUDIO_PROCESSOR] Exporting to format: {output_format} (pydub format: {pydub_format}), path: {output_path}")
+    
+    try:
+        export_params = {"format": pydub_format}
+        
+        if is_lossy and export_bitrate:
+            # For MP3, use bitrate parameter
+            if output_format == "mp3":
+                export_params["bitrate"] = export_bitrate
+            # For AAC (m4a container with AAC codec), use codec and bitrate
+            elif output_format == "aac":
+                export_params["codec"] = "aac"
+                export_params["bitrate"] = export_bitrate
+            # For OGG, use bitrate parameter
+            elif output_format == "ogg":
+                export_params["bitrate"] = export_bitrate
+            # For WMA (asf container), use codec and bitrate
+            elif output_format == "wma":
+                export_params["codec"] = "wmav2"
+                export_params["bitrate"] = export_bitrate
+            # For M4A (default to AAC codec with bitrate)
+            elif output_format == "m4a":
+                export_params["codec"] = "aac"
+                export_params["bitrate"] = export_bitrate
+        elif output_format == "alac":
+            # ALAC codec in m4a container (lossless, no bitrate)
+            export_params["codec"] = "alac"
+        
+        audio.export(output_path, **export_params)
+    except Exception as e:
+        raise ValueError(f"Error exporting audio: {e}")
+    
+    print(f"[AUDIO_PROCESSOR] Audio converted and exported successfully")
 
