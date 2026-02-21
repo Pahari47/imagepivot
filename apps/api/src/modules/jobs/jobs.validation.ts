@@ -93,6 +93,16 @@ const audioNormalizeParamsSchema = z.object({
   format: z.enum(['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a']).optional(),
 });
 
+const audioMetadataParamsSchema = z.object({
+  title: z.string().optional(),
+  artist: z.string().optional(),
+  album: z.string().optional(),
+  year: z.number().int().min(1900).max(2100).optional(),
+  genre: z.string().optional(),
+  trackNumber: z.number().int().min(1).optional(),
+  coverArt: z.string().optional(), // R2 file key for cover art image
+});
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -199,6 +209,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'audio.normalize') {
       const paramsResult = audioNormalizeParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'audio.metadata') {
+      const paramsResult = audioMetadataParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

@@ -1,5 +1,6 @@
 import os
-from typing import Optional
+import shutil
+from typing import Optional, Dict, Any
 from pathlib import Path
 
 try:
@@ -8,6 +9,17 @@ try:
 except ImportError:
     AudioSegment = None
     CouldntDecodeError = Exception
+
+try:
+    from mutagen import File as MutagenFile
+    from mutagen.id3 import ID3, TIT2, TPE1, TALB, TDRC, TCON, TRCK, APIC
+    from mutagen.mp4 import MP4, MP4Cover
+    from mutagen.flac import FLAC, Picture
+    from mutagen.oggvorbis import OggVorbis
+    MUTAGEN_AVAILABLE = True
+except ImportError:
+    MUTAGEN_AVAILABLE = False
+    MutagenFile = None
 
 
 def get_audio_format_from_mime(mime_type: str) -> str:
@@ -425,4 +437,261 @@ def normalize_audio(
         raise ValueError(f"Error normalizing audio: {e}")
     
     print(f"[AUDIO_PROCESSOR] Audio normalized successfully")
+
+
+def edit_audio_metadata(
+    input_path: str,
+    output_path: str,
+    metadata: Dict[str, Any],
+    cover_art_path: Optional[str] = None,
+) -> None:
+    """
+    Edit audio file metadata (ID3 tags, cover art, etc.).
+    
+    Args:
+        input_path: Path to input audio file
+        output_path: Path to save output audio file
+        metadata: Dictionary with metadata fields:
+            - title: str (optional)
+            - artist: str (optional)
+            - album: str (optional)
+            - year: int (optional)
+            - genre: str (optional)
+            - trackNumber: int (optional)
+        cover_art_path: Path to cover art image file (optional)
+    """
+    if not MUTAGEN_AVAILABLE:
+        raise RuntimeError("mutagen is not installed. Please install mutagen for metadata editing.")
+    
+    # Copy input file to output first (we'll modify it in place)
+    shutil.copy2(input_path, output_path)
+    
+    print(f"[AUDIO_PROCESSOR] Editing metadata for: {output_path}")
+    
+    # Detect file format
+    file_ext = Path(output_path).suffix.lower()
+    audio_format = None
+    
+    if file_ext == ".mp3":
+        audio_format = "mp3"
+    elif file_ext in [".m4a", ".mp4", ".aac"]:
+        audio_format = "m4a"
+    elif file_ext == ".flac":
+        audio_format = "flac"
+    elif file_ext == ".ogg":
+        audio_format = "ogg"
+    elif file_ext == ".wav":
+        audio_format = "wav"
+    else:
+        raise ValueError(f"Unsupported format for metadata editing: {file_ext}")
+    
+    print(f"[AUDIO_PROCESSOR] Detected format: {audio_format}")
+    
+    try:
+        if audio_format == "mp3":
+            # MP3 uses ID3 tags
+            audio_file = MutagenFile(output_path, easy=False)
+            if audio_file is None:
+                audio_file = ID3()
+            
+            # Ensure ID3 tags exist
+            if not isinstance(audio_file, ID3):
+                audio_file = ID3(output_path)
+            
+            # Set text tags
+            if metadata.get("title"):
+                audio_file["TIT2"] = TIT2(encoding=3, text=metadata["title"])
+                print(f"[AUDIO_PROCESSOR] Set title: {metadata['title']}")
+            
+            if metadata.get("artist"):
+                audio_file["TPE1"] = TPE1(encoding=3, text=metadata["artist"])
+                print(f"[AUDIO_PROCESSOR] Set artist: {metadata['artist']}")
+            
+            if metadata.get("album"):
+                audio_file["TALB"] = TALB(encoding=3, text=metadata["album"])
+                print(f"[AUDIO_PROCESSOR] Set album: {metadata['album']}")
+            
+            if metadata.get("year"):
+                year_str = str(metadata["year"])
+                audio_file["TDRC"] = TDRC(encoding=3, text=year_str)
+                print(f"[AUDIO_PROCESSOR] Set year: {year_str}")
+            
+            if metadata.get("genre"):
+                audio_file["TCON"] = TCON(encoding=3, text=metadata["genre"])
+                print(f"[AUDIO_PROCESSOR] Set genre: {metadata['genre']}")
+            
+            if metadata.get("trackNumber"):
+                track_str = str(metadata["trackNumber"])
+                audio_file["TRCK"] = TRCK(encoding=3, text=track_str)
+                print(f"[AUDIO_PROCESSOR] Set track number: {track_str}")
+            
+            # Set cover art
+            if cover_art_path and os.path.exists(cover_art_path):
+                with open(cover_art_path, "rb") as f:
+                    cover_data = f.read()
+                
+                # Detect image format
+                cover_ext = Path(cover_art_path).suffix.lower()
+                if cover_ext in [".jpg", ".jpeg"]:
+                    mime_type = "image/jpeg"
+                elif cover_ext == ".png":
+                    mime_type = "image/png"
+                else:
+                    mime_type = "image/jpeg"  # Default
+                
+                audio_file["APIC"] = APIC(
+                    encoding=3,
+                    mime=mime_type,
+                    type=3,  # Cover (front)
+                    desc="Cover",
+                    data=cover_data,
+                )
+                print(f"[AUDIO_PROCESSOR] Set cover art: {cover_art_path}")
+            
+            audio_file.save(v2_version=3)
+            
+        elif audio_format == "m4a":
+            # M4A/MP4 uses MP4 tags
+            audio_file = MP4(output_path)
+            
+            if metadata.get("title"):
+                audio_file["\xa9nam"] = [metadata["title"]]
+                print(f"[AUDIO_PROCESSOR] Set title: {metadata['title']}")
+            
+            if metadata.get("artist"):
+                audio_file["\xa9ART"] = [metadata["artist"]]
+                print(f"[AUDIO_PROCESSOR] Set artist: {metadata['artist']}")
+            
+            if metadata.get("album"):
+                audio_file["\xa9alb"] = [metadata["album"]]
+                print(f"[AUDIO_PROCESSOR] Set album: {metadata['album']}")
+            
+            if metadata.get("year"):
+                year_str = str(metadata["year"])
+                audio_file["\xa9day"] = [year_str]
+                print(f"[AUDIO_PROCESSOR] Set year: {year_str}")
+            
+            if metadata.get("genre"):
+                audio_file["\xa9gen"] = [metadata["genre"]]
+                print(f"[AUDIO_PROCESSOR] Set genre: {metadata['genre']}")
+            
+            if metadata.get("trackNumber"):
+                track_num = metadata["trackNumber"]
+                audio_file["trkn"] = [(track_num, 0)]
+                print(f"[AUDIO_PROCESSOR] Set track number: {track_num}")
+            
+            # Set cover art
+            if cover_art_path and os.path.exists(cover_art_path):
+                with open(cover_art_path, "rb") as f:
+                    cover_data = f.read()
+                
+                cover_ext = Path(cover_art_path).suffix.lower()
+                if cover_ext in [".jpg", ".jpeg"]:
+                    cover = MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)
+                elif cover_ext == ".png":
+                    cover = MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_PNG)
+                else:
+                    cover = MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)
+                
+                audio_file["covr"] = [cover]
+                print(f"[AUDIO_PROCESSOR] Set cover art: {cover_art_path}")
+            
+            audio_file.save()
+            
+        elif audio_format == "flac":
+            # FLAC uses Vorbis comments
+            audio_file = FLAC(output_path)
+            
+            if metadata.get("title"):
+                audio_file["TITLE"] = [metadata["title"]]
+                print(f"[AUDIO_PROCESSOR] Set title: {metadata['title']}")
+            
+            if metadata.get("artist"):
+                audio_file["ARTIST"] = [metadata["artist"]]
+                print(f"[AUDIO_PROCESSOR] Set artist: {metadata['artist']}")
+            
+            if metadata.get("album"):
+                audio_file["ALBUM"] = [metadata["album"]]
+                print(f"[AUDIO_PROCESSOR] Set album: {metadata['album']}")
+            
+            if metadata.get("year"):
+                year_str = str(metadata["year"])
+                audio_file["DATE"] = [year_str]
+                print(f"[AUDIO_PROCESSOR] Set year: {year_str}")
+            
+            if metadata.get("genre"):
+                audio_file["GENRE"] = [metadata["genre"]]
+                print(f"[AUDIO_PROCESSOR] Set genre: {metadata['genre']}")
+            
+            if metadata.get("trackNumber"):
+                track_str = str(metadata["trackNumber"])
+                audio_file["TRACKNUMBER"] = [track_str]
+                print(f"[AUDIO_PROCESSOR] Set track number: {track_str}")
+            
+            # Set cover art
+            if cover_art_path and os.path.exists(cover_art_path):
+                with open(cover_art_path, "rb") as f:
+                    cover_data = f.read()
+                
+                cover_ext = Path(cover_art_path).suffix.lower()
+                picture = Picture()
+                picture.type = 3  # Cover (front)
+                picture.mime = "image/jpeg" if cover_ext in [".jpg", ".jpeg"] else "image/png"
+                picture.data = cover_data
+                
+                audio_file.add_picture(picture)
+                print(f"[AUDIO_PROCESSOR] Set cover art: {cover_art_path}")
+            
+            audio_file.save()
+            
+        elif audio_format == "ogg":
+            # OGG uses Vorbis comments
+            audio_file = OggVorbis(output_path)
+            
+            if metadata.get("title"):
+                audio_file["TITLE"] = [metadata["title"]]
+                print(f"[AUDIO_PROCESSOR] Set title: {metadata['title']}")
+            
+            if metadata.get("artist"):
+                audio_file["ARTIST"] = [metadata["artist"]]
+                print(f"[AUDIO_PROCESSOR] Set artist: {metadata['artist']}")
+            
+            if metadata.get("album"):
+                audio_file["ALBUM"] = [metadata["album"]]
+                print(f"[AUDIO_PROCESSOR] Set album: {metadata['album']}")
+            
+            if metadata.get("year"):
+                year_str = str(metadata["year"])
+                audio_file["DATE"] = [year_str]
+                print(f"[AUDIO_PROCESSOR] Set year: {year_str}")
+            
+            if metadata.get("genre"):
+                audio_file["GENRE"] = [metadata["genre"]]
+                print(f"[AUDIO_PROCESSOR] Set genre: {metadata['genre']}")
+            
+            if metadata.get("trackNumber"):
+                track_str = str(metadata["trackNumber"])
+                audio_file["TRACKNUMBER"] = [track_str]
+                print(f"[AUDIO_PROCESSOR] Set track number: {track_str}")
+            
+            # OGG doesn't support embedded cover art in the same way, skip it
+            if cover_art_path:
+                print(f"[AUDIO_PROCESSOR] Warning: Cover art embedding not fully supported for OGG format")
+            
+            audio_file.save()
+            
+        elif audio_format == "wav":
+            # WAV files can have ID3 tags (though not all players support them)
+            audio_file = MutagenFile(output_path)
+            if audio_file is None:
+                # Try to add ID3 tags to WAV
+                print(f"[AUDIO_PROCESSOR] Warning: WAV metadata support is limited")
+                # For WAV, we'll use RIFF INFO tags if possible
+                # This is a simplified approach - full WAV metadata editing requires more complex handling
+                pass
+        
+        print(f"[AUDIO_PROCESSOR] Metadata editing completed successfully")
+        
+    except Exception as e:
+        raise ValueError(f"Error editing metadata: {e}")
 

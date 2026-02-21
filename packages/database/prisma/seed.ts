@@ -291,6 +291,49 @@ async function main() {
         required: [],
       },
     },
+    {
+      slug: 'audio.metadata',
+      title: 'Audio Metadata',
+      mediaType: MediaType.AUDIO,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Track title',
+          },
+          artist: {
+            type: 'string',
+            description: 'Artist name',
+          },
+          album: {
+            type: 'string',
+            description: 'Album name',
+          },
+          year: {
+            type: 'number',
+            description: 'Release year',
+            minimum: 1900,
+            maximum: 2100,
+          },
+          genre: {
+            type: 'string',
+            description: 'Genre (e.g., Rock, Pop, Jazz, Classical)',
+          },
+          trackNumber: {
+            type: 'number',
+            description: 'Track number on album',
+            minimum: 1,
+          },
+          coverArt: {
+            type: 'string',
+            description: 'Cover art image file key (from R2 storage)',
+          },
+        },
+        required: [],
+      },
+    },
   ];
 
   for (const feature of features) {

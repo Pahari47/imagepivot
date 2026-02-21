@@ -5,6 +5,7 @@ import { AudioTrimConfigPage } from './trim/AudioTrimConfigPage';
 import { AudioConvertConfigPage } from './convert/AudioConvertConfigPage';
 import { AudioCompressConfigPage } from './compress/AudioCompressConfigPage';
 import { AudioNormalizeConfigPage } from './normalize/AudioNormalizeConfigPage';
+import { AudioMetadataConfigPage } from './metadata/AudioMetadataConfigPage';
 
 /**
  * Dynamically loads the appropriate feature config page component
@@ -24,10 +25,10 @@ export function AudioFeatureConfigPageLoader({ featureSlug, ...props }: FeatureC
       return <AudioCompressConfigPage {...props} />;
     case 'normalize':
       return <AudioNormalizeConfigPage {...props} />;
+    case 'metadata':
+      return <AudioMetadataConfigPage {...props} />;
     
     // Add more features here as they're created:
-    // case 'metadata':
-    //   return <AudioMetadataConfigPage {...props} />;
     
     default:
       return (
