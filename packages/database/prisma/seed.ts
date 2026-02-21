@@ -101,6 +101,29 @@ async function main() {
         required: [],
       },
     },
+    {
+      slug: 'image.convert',
+      title: 'Convert PNG',
+      mediaType: MediaType.IMAGE,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          format: {
+            type: 'string',
+            enum: ['jpeg', 'jpg', 'png', 'svg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'ico', 'heic', 'avif'],
+            description: 'Output image format',
+          },
+          conversionType: {
+            type: 'string',
+            enum: ['to', 'from'],
+            description: 'Conversion type: "to" for converting to PNG, "from" for converting from PNG',
+            default: 'to',
+          },
+        },
+        required: ['format'],
+      },
+    },
   ];
 
   for (const feature of features) {

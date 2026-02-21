@@ -15,6 +15,11 @@ def get_image_format_from_mime(mime_type: str) -> str:
         "image/webp": "WEBP",
         "image/bmp": "BMP",
         "image/tiff": "TIFF",
+        "image/tif": "TIFF",
+        "image/svg+xml": "PNG",
+        "image/x-icon": "PNG",
+        "image/heic": "JPEG",
+        "image/avif": "PNG",
     }
     return mime_to_format.get(mime_type.lower(), "JPEG")
 
@@ -23,11 +28,15 @@ def get_extension_from_format(format: str) -> str:
     """Get file extension from PIL format."""
     format_to_ext = {
         "JPEG": ".jpg",
+        "JPG": ".jpg",
         "PNG": ".png",
         "GIF": ".gif",
         "WEBP": ".webp",
         "BMP": ".bmp",
         "TIFF": ".tiff",
+        "TIF": ".tiff",
+        "ICO": ".ico",
+        "SVG": ".svg",
     }
     return format_to_ext.get(format.upper(), ".jpg")
 
@@ -135,5 +144,35 @@ def compress_image(
         save_kwargs["optimize"] = optimize
     elif target_format == "PNG":
         save_kwargs["optimize"] = optimize
+    
+    img.save(output_path, **save_kwargs)
+
+
+def convert_image(
+    input_path: str,
+    output_path: str,
+    output_format: str,
+    quality: int = 95,
+) -> None:
+    """
+    Convert an image to a different format.
+    
+    Args:
+        input_path: Path to input image
+        output_path: Path to save output image
+        output_format: Target format (JPEG, PNG, WEBP, etc.)
+        quality: Quality for JPEG/WebP (1-100, default: 95)
+    """
+    img = Image.open(input_path)
+    target_format = output_format.upper()
+    
+    img = ensure_rgb_mode(img, target_format)
+    
+    save_kwargs = {"format": target_format}
+    if target_format in ("JPEG", "WEBP"):
+        save_kwargs["quality"] = quality
+        save_kwargs["optimize"] = True
+    elif target_format == "PNG":
+        save_kwargs["optimize"] = True
     
     img.save(output_path, **save_kwargs)

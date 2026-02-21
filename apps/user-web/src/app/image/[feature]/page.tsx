@@ -213,15 +213,15 @@ function ImageFeaturePageContent({ featureSlug }: { featureSlug: string }) {
             </div>
           )}
           {selectedFile ? (
-            <FeatureConfigPageLoader
-              featureSlug={featureSlug}
-              config={config}
-              onChange={setConfig}
-              selectedFile={selectedFile}
-              onRemoveFile={handleRemoveFile}
-              onProcess={handleConfigNext}
-              error={error}
-            />
+          <FeatureConfigPageLoader
+            featureSlug={featureSlug}
+            config={config}
+            onChange={setConfig}
+            selectedFile={selectedFile}
+            onRemoveFile={handleRemoveFile}
+            onProcess={handleConfigNext}
+            error={error}
+          />
           ) : (
             <div className="p-8">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
