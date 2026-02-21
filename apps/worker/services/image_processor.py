@@ -148,6 +148,39 @@ def compress_image(
     img.save(output_path, **save_kwargs)
 
 
+def adjust_quality(
+    input_path: str,
+    output_path: str,
+    quality: int = 95,
+    output_format: Optional[str] = None,
+    optimize: bool = True,
+) -> None:
+    """
+    Adjust image quality without changing dimensions.
+    
+    Args:
+        input_path: Path to input image
+        output_path: Path to save output image
+        quality: Quality for JPEG/WebP (1-100, default: 95)
+        output_format: Output format (JPEG, PNG, etc.). If None, uses input format
+        optimize: If True, enable optimization (default: True)
+    """
+    img = Image.open(input_path)
+    original_format = img.format or "JPEG"
+    target_format = output_format or original_format
+    
+    img = ensure_rgb_mode(img, target_format)
+    
+    save_kwargs = {"format": target_format}
+    if target_format in ("JPEG", "WEBP"):
+        save_kwargs["quality"] = quality
+        save_kwargs["optimize"] = optimize
+    elif target_format == "PNG":
+        save_kwargs["optimize"] = optimize
+    
+    img.save(output_path, **save_kwargs)
+
+
 def convert_image(
     input_path: str,
     output_path: str,

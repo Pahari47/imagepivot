@@ -11,6 +11,8 @@ import { registerCompressFeature } from './compress/register';
 import { registerConvertFeature } from './convert/register';
 // Register convert-jpg feature
 import { registerConvertJpgFeature } from './convert-jpg/register';
+// Register quality feature
+import { registerQualityFeature } from './quality/register';
 
 // Initialize all image features
 export function registerImageFeatures(): void {
@@ -18,6 +20,7 @@ export function registerImageFeatures(): void {
   registerCompressFeature();
   registerConvertFeature();
   registerConvertJpgFeature();
+  registerQualityFeature();
   
   // Add more features here as they're created:
   // registerCropFeature();

@@ -28,6 +28,12 @@ const compressParamsSchema = z.object({
   optimize: z.boolean().default(true),
 });
 
+const qualityParamsSchema = z.object({
+  quality: z.number().int().min(1).max(100),
+  format: z.enum(['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp']).optional(),
+  optimize: z.boolean().default(true),
+});
+
 export const createJobSchema = z
   .object({
     orgId: z.string().min(1),
@@ -69,6 +75,19 @@ export const createJobSchema = z
 
     if (val.featureSlug === 'image.compress') {
       const paramsResult = compressParamsSchema.safeParse(val.params);
+      if (!paramsResult.success) {
+        paramsResult.error.issues.forEach((issue) => {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: ['params', ...issue.path],
+          });
+        });
+      }
+    }
+
+    if (val.featureSlug === 'image.quality') {
+      const paramsResult = qualityParamsSchema.safeParse(val.params);
       if (!paramsResult.success) {
         paramsResult.error.issues.forEach((issue) => {
           ctx.addIssue({

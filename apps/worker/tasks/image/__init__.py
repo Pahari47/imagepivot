@@ -13,6 +13,8 @@ except Exception as import_err:
     import traceback
     traceback.print_exc()
     raise
+print("[ROUTE-MODULE] Importing quality_control_task...", flush=True)
+from tasks.image.quality import quality_control_task
 
 
 def route_image_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -29,7 +31,7 @@ def route_image_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
     print(f"[ROUTE] Job ID: {job_id}", flush=True)
     print(f"[ROUTE] Feature Slug: '{feature_slug}'", flush=True)
     print(f"[ROUTE] Params: {params}", flush=True)
-    print(f"[ROUTE] Available handlers: resize, compress, convert, convert-jpg", flush=True)
+    print(f"[ROUTE] Available handlers: resize, compress, convert, convert-jpg, quality", flush=True)
     
     if feature_slug == "image.resize":
         print(f"[ROUTE] Routing to resize_image_task", flush=True)
@@ -56,6 +58,9 @@ def route_image_feature(payload: Dict[str, Any]) -> Dict[str, Any]:
             sys.stdout.flush()
             print(f"[ROUTE] ======================================================", flush=True)
             raise
+    elif feature_slug == "image.quality":
+        print(f"[ROUTE] Routing to quality_control_task", flush=True)
+        return quality_control_task(payload)
     else:
         error_msg = f"Unknown image feature: {feature_slug}"
         print(f"[ROUTE] ========== ERROR ==========", flush=True)

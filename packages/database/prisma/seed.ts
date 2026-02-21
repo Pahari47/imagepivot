@@ -147,6 +147,35 @@ async function main() {
         required: ['format'],
       },
     },
+    {
+      slug: 'image.quality',
+      title: 'Image Quality Control',
+      mediaType: MediaType.IMAGE,
+      isEnabled: true,
+      configSchema: {
+        type: 'object',
+        properties: {
+          quality: {
+            type: 'number',
+            description: 'Quality level (1-100). Higher values preserve more detail but result in larger file sizes',
+            minimum: 1,
+            maximum: 100,
+            default: 95,
+          },
+          format: {
+            type: 'string',
+            enum: ['jpeg', 'jpg', 'png', 'webp', 'gif', 'bmp'],
+            description: 'Output image format (optional, keeps original if not specified)',
+          },
+          optimize: {
+            type: 'boolean',
+            description: 'Enable image optimization',
+            default: true,
+          },
+        },
+        required: ['quality'],
+      },
+    },
   ];
 
   for (const feature of features) {
